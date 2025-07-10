@@ -67,7 +67,7 @@ class MemberRatesResponse(BaseModel):
 
 class EarningsCalculation(BaseModel):
     duration_seconds: int
-    currency: str = Field(default="usd", regex="^(usd|eur)$")
+    currency: str = Field(default="usd", pattern="^(usd|eur)$")
     client_id: Optional[int] = None
     work_date: Optional[date] = None
 

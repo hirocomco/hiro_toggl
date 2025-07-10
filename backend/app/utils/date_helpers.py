@@ -3,7 +3,7 @@ Date utility functions for report filtering and date range calculations.
 """
 
 from datetime import date, datetime, timedelta
-from typing import Tuple, Optional
+from typing import Tuple, Optional, List
 from calendar import monthrange
 import calendar
 

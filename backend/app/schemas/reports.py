@@ -58,8 +58,8 @@ class ReportRequest(BaseModel):
 class ClientReportRequest(ReportRequest):
     """Request schema for client reports."""
     include_project_breakdown: bool = True
-    sort_by: str = Field(default="total_hours", regex="^(total_hours|billable_hours|total_earnings_usd|total_earnings_eur|client_name)$")
-    sort_order: str = Field(default="desc", regex="^(asc|desc)$")
+    sort_by: str = Field(default="total_hours", pattern="^(total_hours|billable_hours|total_earnings_usd|total_earnings_eur|client_name)$")
+    sort_order: str = Field(default="desc", pattern="^(asc|desc)$")
 
 
 class MemberReportRequest(ReportRequest):
@@ -226,8 +226,8 @@ class MemberPerformanceResponse(BaseModel):
 
 class ReportExportRequest(BaseModel):
     """Request schema for report exports."""
-    report_type: str = Field(..., regex="^(workspace|client_detail|member_performance)$")
-    format: str = Field(default="json", regex="^(json|csv|pdf)$")
+    report_type: str = Field(..., pattern="^(workspace|client_detail|member_performance)$")
+    format: str = Field(default="json", pattern="^(json|csv|pdf)$")
     workspace_id: int
     client_id: Optional[int] = None
     member_id: Optional[int] = None
@@ -271,8 +271,8 @@ class DrillDownRequest(BaseModel):
     billable_only: bool = False
     limit: int = Field(default=100, ge=1, le=1000)
     offset: int = Field(default=0, ge=0)
-    sort_by: str = Field(default="start_time", regex="^(start_time|duration|description|user_name|project_name|client_name)$")
-    sort_order: str = Field(default="desc", regex="^(asc|desc)$")
+    sort_by: str = Field(default="start_time", pattern="^(start_time|duration|description|user_name|project_name|client_name)$")
+    sort_order: str = Field(default="desc", pattern="^(asc|desc)$")
 
 
 class DrillDownResponse(BaseModel):

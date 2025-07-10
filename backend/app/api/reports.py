@@ -136,12 +136,12 @@ async def generate_workspace_report(
 @router.get("/client/{client_id}", response_model=ClientDetailResponse)
 async def get_client_detail_report(
     client_id: Optional[int],
+    report_service: ReportService = Depends(get_report_service),
     workspace_id: int = Query(..., description="Workspace ID"),
     period: ReportPeriod = Query(ReportPeriod.LAST_30_DAYS),
     start_date: Optional[date] = Query(None),
     end_date: Optional[date] = Query(None),
-    include_project_breakdown: bool = Query(True),
-    report_service: ReportService = Depends(get_report_service)
+    include_project_breakdown: bool = Query(True)
 ):
     """
     Get detailed report for a specific client.
@@ -231,11 +231,11 @@ async def get_client_detail_report(
 @router.get("/member/{member_id}", response_model=MemberPerformanceResponse)
 async def get_member_performance_report(
     member_id: int,
+    report_service: ReportService = Depends(get_report_service),
     workspace_id: int = Query(..., description="Workspace ID"),
     period: ReportPeriod = Query(ReportPeriod.LAST_30_DAYS),
     start_date: Optional[date] = Query(None),
-    end_date: Optional[date] = Query(None),
-    report_service: ReportService = Depends(get_report_service)
+    end_date: Optional[date] = Query(None)
 ):
     """
     Get performance report for a specific member.
@@ -454,10 +454,10 @@ async def get_drill_down_report(
 @router.get("/summary/{workspace_id}")
 async def get_report_summary(
     workspace_id: int,
+    db: Session = Depends(get_db),
     period: ReportPeriod = Query(ReportPeriod.LAST_30_DAYS),
     start_date: Optional[date] = Query(None),
-    end_date: Optional[date] = Query(None),
-    db: Session = Depends(get_db)
+    end_date: Optional[date] = Query(None)
 ):
     """
     Get quick summary statistics for reports dashboard.
@@ -515,8 +515,8 @@ async def get_report_summary(
 @router.get("/clients/{workspace_id}")
 async def get_clients_for_reports(
     workspace_id: int,
-    include_no_client: bool = Query(True, description="Include 'No Client' option"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    include_no_client: bool = Query(True, description="Include 'No Client' option")
 ):
     """
     Get list of clients for report filtering dropdowns.

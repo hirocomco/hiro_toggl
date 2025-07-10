@@ -9,6 +9,7 @@ from datetime import date, datetime, timedelta
 from decimal import Decimal
 import logging
 from dataclasses import dataclass
+from fastapi import Depends
 
 from app.models.models import (
     Client, Project, Member, TimeEntryCache, Rate, SyncLog
@@ -718,16 +719,14 @@ class ReportService:
         }
 
 
-def get_report_service(db: Session = None) -> ReportService:
+def get_report_service(db: Session = Depends(get_db)) -> ReportService:
     """
-    Factory function to get ReportService instance.
+    FastAPI dependency to get ReportService instance.
     
     Args:
-        db: Database session (if None, will get from dependency)
+        db: Database session from FastAPI dependency
         
     Returns:
         ReportService instance
     """
-    if db is None:
-        db = next(get_db())
     return ReportService(db)

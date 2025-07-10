@@ -22,10 +22,10 @@ class Client:
     """Represents a Toggl client."""
     id: int
     name: str
+    workspace_id: int
     notes: Optional[str] = None
     external_reference: Optional[str] = None
     archived: bool = False
-    workspace_id: int
 
 
 @dataclass
@@ -33,9 +33,9 @@ class Project:
     """Represents a Toggl project."""
     id: int
     name: str
+    workspace_id: int
     client_id: Optional[int] = None
     client_name: Optional[str] = None
-    workspace_id: int
     billable: bool = False
     is_private: bool = False
     active: bool = True
@@ -49,12 +49,12 @@ class TimeEntry:
     description: str
     duration: int  # Duration in seconds
     start: str
-    stop: Optional[str]
     user_id: int
     user_name: str
-    project_id: Optional[int]
-    project_name: Optional[str]
     workspace_id: int
+    stop: Optional[str] = None
+    project_id: Optional[int] = None
+    project_name: Optional[str] = None
     billable: bool = False
     tags: Optional[List[str]] = None
     client_id: Optional[int] = None

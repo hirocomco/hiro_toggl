@@ -72,7 +72,7 @@ class Member(Base):
 
     # Relationships
     rates = relationship("Rate", back_populates="member")
-    time_entries = relationship("TimeEntryCache", back_populates="user")
+    time_entries = relationship("TimeEntryCache", back_populates="user", foreign_keys="TimeEntryCache.user_id", primaryjoin="Member.toggl_id == TimeEntryCache.user_id")
 
     def __repr__(self):
         return f"<Member(id={self.id}, toggl_id={self.toggl_id}, name='{self.name}')>"

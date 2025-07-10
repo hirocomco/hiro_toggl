@@ -2,7 +2,7 @@
 API endpoints for data synchronization.
 """
 
-from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks, status
+from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks, status, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import date, datetime, timedelta
@@ -11,7 +11,7 @@ from pydantic import BaseModel, Field
 from app.models.database import get_db
 from app.services.sync_service import SyncService, get_sync_service
 from app.models.models import SyncLog
-from toggl_client.enhanced_client import EnhancedTogglClient, TogglAPIError
+from toggl_client.toggl_client import TogglClient, TogglAPIError
 from config.config import TogglConfig
 
 
@@ -21,7 +21,7 @@ router = APIRouter(prefix="/api/sync", tags=["sync"])
 # Pydantic models for request/response
 class SyncRequest(BaseModel):
     workspace_id: int
-    sync_type: Optional[str] = Field(None, regex="^(clients|projects|members|time_entries|full)$")
+    sync_type: Optional[str] = Field(None, pattern="^(clients|projects|members|time_entries|full)$")
     start_date: Optional[date] = None
     end_date: Optional[date] = None
     time_entries_days: Optional[int] = Field(30, ge=1, le=365)
@@ -52,7 +52,7 @@ class SyncStatusResponse(BaseModel):
     is_sync_running: bool = False
 
 
-def get_toggl_client() -> EnhancedTogglClient:
+def get_toggl_client() -> TogglClient:
     """Dependency to get configured Toggl client."""
     config = TogglConfig.from_env()
     
@@ -63,9 +63,9 @@ def get_toggl_client() -> EnhancedTogglClient:
         )
     
     if config.api_token:
-        return EnhancedTogglClient(api_token=config.api_token)
+        return TogglClient(api_token=config.api_token)
     else:
-        return EnhancedTogglClient(email=config.email, password=config.password)
+        return TogglClient(email=config.email, password=config.password)
 
 
 def sync_log_to_response(sync_log: SyncLog) -> SyncLogResponse:
@@ -198,7 +198,7 @@ async def get_sync_status(
 async def get_sync_logs(
     workspace_id: int,
     sync_type: Optional[str] = None,
-    limit: int = Field(20, ge=1, le=100),
+    limit: int = Query(20, ge=1, le=100),
     sync_service: SyncService = Depends(get_sync_service)
 ):
     """
@@ -222,7 +222,7 @@ async def get_sync_logs(
 @router.post("/cleanup/{workspace_id}")
 async def cleanup_old_data(
     workspace_id: int,
-    days_to_keep: int = Field(90, ge=7, le=365),
+    days_to_keep: int = Query(90, ge=7, le=365),
     sync_service: SyncService = Depends(get_sync_service)
 ):
     """
@@ -244,7 +244,7 @@ async def cleanup_old_data(
 
 @router.get("/test/connection")
 async def test_toggl_connection(
-    toggl_client: EnhancedTogglClient = Depends(get_toggl_client)
+    toggl_client: TogglClient = Depends(get_toggl_client)
 ):
     """
     Test connection to Toggl API.
@@ -279,8 +279,8 @@ async def test_toggl_connection(
 @router.post("/force-sync/{workspace_id}")
 async def force_full_sync(
     workspace_id: int,
-    time_entries_days: int = Field(30, ge=1, le=365),
     background_tasks: BackgroundTasks,
+    time_entries_days: int = Query(30, ge=1, le=365),
     sync_service: SyncService = Depends(get_sync_service)
 ):
     """

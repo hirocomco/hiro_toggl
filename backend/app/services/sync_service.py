@@ -7,17 +7,18 @@ from sqlalchemy import and_, or_
 from typing import List, Optional, Dict, Any, Tuple
 from datetime import datetime, date, timedelta
 import logging
+from fastapi import Depends
 
 from app.models.models import Client, Project, Member, TimeEntryCache, SyncLog
 from app.models.database import get_db
-from toggl_client.enhanced_client import EnhancedTogglClient, TogglAPIError
+from toggl_client import EnhancedTogglClient as TogglClient, TogglAPIError
 from config.config import TogglConfig
 
 
 class SyncService:
     """Service for synchronizing Toggl data with local database."""
 
-    def __init__(self, db: Session, toggl_client: EnhancedTogglClient):
+    def __init__(self, db: Session, toggl_client: TogglClient):
         self.db = db
         self.toggl_client = toggl_client
         self.logger = logging.getLogger(__name__)
@@ -460,25 +461,20 @@ class SyncService:
         return deleted_count
 
 
-def get_sync_service(db: Session = None, toggl_client: EnhancedTogglClient = None) -> SyncService:
+def get_sync_service(db: Session = Depends(get_db)) -> SyncService:
     """
-    Factory function to get SyncService instance.
+    FastAPI dependency to get SyncService instance.
     
     Args:
-        db: Database session (if None, will get from dependency)
-        toggl_client: Toggl client (if None, will create from config)
+        db: Database session from FastAPI dependency
         
     Returns:
         SyncService instance
     """
-    if db is None:
-        db = next(get_db())
-    
-    if toggl_client is None:
-        config = TogglConfig.from_env()
-        if config.api_token:
-            toggl_client = EnhancedTogglClient(api_token=config.api_token)
-        else:
-            toggl_client = EnhancedTogglClient(email=config.email, password=config.password)
+    config = TogglConfig.from_env()
+    if config.api_token:
+        toggl_client = TogglClient(api_token=config.api_token)
+    else:
+        toggl_client = TogglClient(email=config.email, password=config.password)
     
     return SyncService(db, toggl_client)

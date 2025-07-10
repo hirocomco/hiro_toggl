@@ -7,13 +7,13 @@ from typing import List, Optional
 import os
 from datetime import datetime, timedelta
 
-from toggl_client.enhanced_client import EnhancedTogglClient, ClientReport, TogglAPIError
+from toggl_client.toggl_client import TogglClient, MemberTimeTotal, TogglAPIError
 from config.config import TogglConfig
 
 router = APIRouter(prefix="/api/test", tags=["test"])
 
 
-def get_toggl_client() -> EnhancedTogglClient:
+def get_toggl_client() -> TogglClient:
     """Dependency to get configured Toggl client."""
     config = TogglConfig.from_env()
     
@@ -24,13 +24,13 @@ def get_toggl_client() -> EnhancedTogglClient:
         )
     
     if config.api_token:
-        return EnhancedTogglClient(api_token=config.api_token)
+        return TogglClient(api_token=config.api_token)
     else:
-        return EnhancedTogglClient(email=config.email, password=config.password)
+        return TogglClient(email=config.email, password=config.password)
 
 
 @router.get("/connection")
-async def test_connection(client: EnhancedTogglClient = Depends(get_toggl_client)):
+async def test_connection(client: TogglClient = Depends(get_toggl_client)):
     """Test connection to Toggl API."""
     try:
         user = client.get_current_user()
@@ -58,7 +58,7 @@ async def test_connection(client: EnhancedTogglClient = Depends(get_toggl_client
 @router.get("/clients/{workspace_id}")
 async def test_get_clients(
     workspace_id: int,
-    client: EnhancedTogglClient = Depends(get_toggl_client)
+    client: TogglClient = Depends(get_toggl_client)
 ):
     """Test getting clients for a workspace."""
     try:
@@ -81,7 +81,7 @@ async def test_get_clients(
 @router.get("/projects/{workspace_id}")
 async def test_get_projects(
     workspace_id: int,
-    client: EnhancedTogglClient = Depends(get_toggl_client)
+    client: TogglClient = Depends(get_toggl_client)
 ):
     """Test getting projects for a workspace."""
     try:
@@ -107,7 +107,7 @@ async def test_get_projects(
 async def test_get_time_entries(
     workspace_id: int,
     days: int = 7,
-    client: EnhancedTogglClient = Depends(get_toggl_client)
+    client: TogglClient = Depends(get_toggl_client)
 ):
     """Test getting time entries with client information."""
     try:
@@ -149,7 +149,7 @@ async def test_get_time_entries(
 async def test_client_reports(
     workspace_id: int,
     days: int = 30,
-    client: EnhancedTogglClient = Depends(get_toggl_client)
+    client: TogglClient = Depends(get_toggl_client)
 ):
     """Test generating client reports."""
     try:
