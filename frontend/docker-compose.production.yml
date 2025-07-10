@@ -1,0 +1,28 @@
+# Production override for docker-compose
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.production.yml up
+
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      target: production
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    volumes: []  # Remove dev volumes for production
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - frontend
+      - backend
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+    networks:
+      - toggl-network
+    restart: unless-stopped

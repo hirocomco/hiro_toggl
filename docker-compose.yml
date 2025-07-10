@@ -1,0 +1,69 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=postgresql://toggl_user:toggl_password@db:5432/toggl_reports
+      - TOGGL_API_TOKEN=${TOGGL_API_TOKEN}
+      - TOGGL_WORKSPACE_ID=${TOGGL_WORKSPACE_ID}
+    volumes:
+      - ./backend:/app
+      - ./src:/app/toggl_client
+      - ./config:/app/config
+    networks:
+      - toggl-network
+    restart: unless-stopped
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=toggl_reports
+      - POSTGRES_USER=toggl_user
+      - POSTGRES_PASSWORD=toggl_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - toggl-network
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      target: development
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - toggl-network
+    restart: unless-stopped
+
+  adminer:
+    image: adminer:latest
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    networks:
+      - toggl-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  toggl-network:
+    driver: bridge

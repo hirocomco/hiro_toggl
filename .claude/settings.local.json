@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:engineering.toggl.com)",
+      "Bash(python:*)",
+      "WebFetch(domain:developers.track.toggl.com)",
+      "Bash(docker-compose build:*)"
+    ],
+    "deny": []
+  }
+}
