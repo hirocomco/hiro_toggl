@@ -362,9 +362,9 @@ class TestValidationFunctions:
     
     def test_sanitize_credentials(self):
         """Test credential sanitization."""
-        text_with_token = "Error: token abc123def456ghi789 failed"
+        text_with_token = "Error: token abc123def456789012345678901234567890abcd failed"
         sanitized = _sanitize_credentials(text_with_token)
-        assert "abc123def456ghi789" not in sanitized
+        assert "abc123def456789012345678901234567890abcd" not in sanitized
         assert "[API_TOKEN]" in sanitized
         
         text_with_email = "Error: user@example.com authentication failed"

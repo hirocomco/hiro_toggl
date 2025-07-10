@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  # Interactive shell for development and testing
+  toggl-dev:
+    build: .
+    container_name: toggl-dev
+    volumes:
+      - ./.env:/app/.env:ro
+      - ./src:/app/src:ro
+      - ./examples:/app/examples:ro
+      - ./tests:/app/tests:ro
+    stdin_open: true
+    tty: true
+    command: /bin/bash
+    
+  # Service to run quick test
+  toggl-test:
+    build: .
+    container_name: toggl-test
+    volumes:
+      - ./.env:/app/.env:ro
+    command: python quick_test.py
+
+  # Service to run example script
+  toggl-example:
+    build: .
+    container_name: toggl-example
+    volumes:
+      - ./.env:/app/.env:ro
+    command: python examples/get_member_time_example.py
+
+  # Service to run tests
+  toggl-pytest:
+    build: .
+    container_name: toggl-pytest
+    volumes:
+      - ./.env:/app/.env:ro
+    command: pytest tests/ -v

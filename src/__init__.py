@@ -1,23 +1,3 @@
-"""
-Toggl API Integration Package
+from .enhanced_client import EnhancedTogglClient, TogglAPIError
 
-This package provides a comprehensive interface to the Toggl Track API for
-retrieving time tracking data and member statistics.
-"""
-
-from .toggl_client import (
-    TogglClient,
-    TogglAPIError,
-    TimeEntry,
-    MemberTimeTotal
-)
-
-__version__ = "1.0.0"
-__author__ = "Toggl API Integration"
-
-__all__ = [
-    "TogglClient",
-    "TogglAPIError", 
-    "TimeEntry",
-    "MemberTimeTotal"
-] 
+__all__ = ['EnhancedTogglClient', 'TogglAPIError']

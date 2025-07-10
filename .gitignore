@@ -62,4 +62,30 @@ htmlcov/
 # mypy
 .mypy_cache/
 .dmypy.json
-dmypy.json 
+dmypy.json
+
+# Claude settings (local)
+.claude/settings.local.json
+
+# SMB temporary files
+.smbdelete*
+frontend/.smbdelete*
+src/.smbdelete*
+
+# Development files
+simple_backend.py
+
+# Node modules
+node_modules/
+
+# Docker
+.dockerignore
+
+# Frontend build
+frontend/dist/
+frontend/build/
+
+# Database
+*.db
+*.sqlite
+postgres_data/ 
