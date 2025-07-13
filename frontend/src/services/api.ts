@@ -57,6 +57,23 @@ class ApiService {
     return response.data
   }
 
+  // Generic HTTP methods for use by other services
+  async get<T = any>(url: string, config?: any): Promise<AxiosResponse<T>> {
+    return await this.api.get<T>(url, config)
+  }
+
+  async post<T = any>(url: string, data?: any, config?: any): Promise<AxiosResponse<T>> {
+    return await this.api.post<T>(url, data, config)
+  }
+
+  async put<T = any>(url: string, data?: any, config?: any): Promise<AxiosResponse<T>> {
+    return await this.api.put<T>(url, data, config)
+  }
+
+  async delete<T = any>(url: string, config?: any): Promise<AxiosResponse<T>> {
+    return await this.api.delete<T>(url, config)
+  }
+
   // Reports API
   async getWorkspaceReport(request: ClientReportRequest): Promise<WorkspaceReportResponse> {
     const response = await this.api.post<WorkspaceReportResponse>('/reports/workspace', request)

@@ -11,10 +11,6 @@ services:
       - DATABASE_URL=postgresql://toggl_user:toggl_password@db:5432/toggl_reports
       - TOGGL_API_TOKEN=${TOGGL_API_TOKEN}
       - TOGGL_WORKSPACE_ID=${TOGGL_WORKSPACE_ID}
-    volumes:
-      - ./backend:/app
-      - ./src:/app/toggl_client
-      - ./config:/app/config
     networks:
       - toggl-network
     restart: unless-stopped
@@ -27,7 +23,6 @@ services:
       - POSTGRES_PASSWORD=toggl_password
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "5433:5432"
     networks:
@@ -45,7 +40,6 @@ services:
     environment:
       - VITE_API_URL=http://localhost:8001
     volumes:
-      - ./frontend:/app
       - /app/node_modules
     networks:
       - toggl-network

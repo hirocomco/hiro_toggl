@@ -2,7 +2,7 @@
 Pydantic schemas for report API requests and responses.
 """
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, validator, computed_field
 from typing import List, Optional, Dict, Any
 from datetime import date, datetime
 from decimal import Decimal
@@ -121,11 +121,12 @@ class ClientReportData(BaseModel):
     project_count: int = Field(..., ge=0)
     member_reports: List[MemberReportData] = []
     
+    @computed_field
     @property
     def billable_percentage(self) -> float:
-        """Calculate billable percentage."""
+        """Calculate billable percentage - all hours are billable."""
         if self.total_hours > 0:
-            return round((self.billable_hours / self.total_hours) * 100, 1)
+            return 100.0
         return 0.0
 
     class Config:
@@ -144,23 +145,24 @@ class ReportTotals(BaseModel):
     billable_earnings_usd: Optional[float] = Field(None, ge=0)
     billable_earnings_eur: Optional[float] = Field(None, ge=0)
     
+    @computed_field
     @property
     def billable_percentage(self) -> float:
-        """Calculate billable percentage."""
+        """Calculate billable percentage - all hours are billable."""
         if self.total_hours > 0:
-            return round((self.billable_hours / self.total_hours) * 100, 1)
+            return 100.0
         return 0.0
 
     @property
     def average_hourly_rate_usd(self) -> Optional[float]:
-        """Calculate average hourly rate in USD."""
+        """Calculate average hourly rate in USD based on total hours."""
         if self.total_hours > 0 and self.total_earnings_usd:
             return round(self.total_earnings_usd / self.total_hours, 2)
         return None
 
     @property
     def average_hourly_rate_eur(self) -> Optional[float]:
-        """Calculate average hourly rate in EUR."""
+        """Calculate average hourly rate in EUR based on total hours."""
         if self.total_hours > 0 and self.total_earnings_eur:
             return round(self.total_earnings_eur / self.total_hours, 2)
         return None

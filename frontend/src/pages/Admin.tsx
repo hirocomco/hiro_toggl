@@ -36,7 +36,7 @@ export default function Admin() {
   const [saving, setSaving] = useState(false)
 
   // Hardcoded workspace ID for demo
-  const WORKSPACE_ID = 123456
+  const WORKSPACE_ID = 842441
 
   useEffect(() => {
     loadAdminData()
@@ -146,8 +146,8 @@ export default function Admin() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900">Rate Management</h2>
-          <p className="text-sm text-gray-500">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Rate Management</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             Manage hourly rates for team members and clients
           </p>
         </div>
@@ -167,8 +167,8 @@ export default function Admin() {
           <div className="card-body">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Team Members</p>
-                <p className="text-2xl font-bold text-gray-900">{members.length}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Team Members</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{members.length}</p>
               </div>
               <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary-100">
                 <Users className="h-6 w-6 text-primary-600" />
@@ -181,8 +181,8 @@ export default function Admin() {
           <div className="card-body">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Active Clients</p>
-                <p className="text-2xl font-bold text-gray-900">{clients.length}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Active Clients</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{clients.length}</p>
               </div>
               <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-success-100">
                 <DollarSign className="h-6 w-6 text-success-600" />
@@ -195,8 +195,8 @@ export default function Admin() {
           <div className="card-body">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Rate Configurations</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-sm text-gray-600 dark:text-gray-400">Rate Configurations</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                   {workspaceRates ? Object.keys(workspaceRates.rates).length : 0}
                 </p>
               </div>
@@ -212,7 +212,7 @@ export default function Admin() {
       <div className="card">
         <div className="card-header">
           <h3 className="text-lg font-semibold">Member Rates</h3>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             Set default rates and client-specific overrides for each team member
           </p>
         </div>
@@ -238,10 +238,10 @@ export default function Admin() {
                     <tr key={member.id} className="table-row">
                       <td className="table-cell">
                         <div>
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
                             {member.name}
                           </div>
-                          <div className="text-sm text-gray-500">
+                          <div className="text-sm text-gray-500 dark:text-gray-400">
                             {member.email}
                           </div>
                         </div>
@@ -284,7 +284,7 @@ export default function Admin() {
                             const client = clients.find(c => c.id === parseInt(clientId))
                             return (
                               <div key={clientId} className="flex items-center justify-between text-xs">
-                                <span className="text-gray-600">{client?.name || 'Unknown'}</span>
+                                <span className="text-gray-600 dark:text-gray-300">{client?.name || 'Unknown'}</span>
                                 <div className="flex space-x-2">
                                   {rate.usd && (
                                     <span className="text-money">{formatCurrency(rate.usd, 'USD')}</span>
@@ -297,7 +297,7 @@ export default function Admin() {
                             )
                           })}
                           {Object.keys(clientRates).length === 0 && (
-                            <span className="text-xs text-gray-400">No overrides</span>
+                            <span className="text-xs text-gray-400 dark:text-gray-500">No overrides</span>
                           )}
                         </div>
                       </td>
@@ -357,7 +357,7 @@ export default function Admin() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {clients.map((client) => (
               <div key={client.id} className="border border-gray-200 rounded-lg p-4">
-                <h4 className="font-medium text-gray-900 mb-2">{client.name}</h4>
+                <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">{client.name}</h4>
                 <div className="space-y-2">
                   {members.map((member) => {
                     const memberRates = workspaceRates?.rates[member.id]
@@ -365,7 +365,7 @@ export default function Admin() {
                     
                     return (
                       <div key={member.id} className="flex items-center justify-between text-sm">
-                        <span className="text-gray-600">{member.name}</span>
+                        <span className="text-gray-600 dark:text-gray-300">{member.name}</span>
                         <div className="flex items-center space-x-2">
                           {clientRate ? (
                             <div className="flex space-x-1">

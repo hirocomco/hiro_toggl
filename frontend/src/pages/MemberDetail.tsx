@@ -15,7 +15,7 @@ export default function MemberDetail() {
   const [error, setError] = useState<string | null>(null)
 
   // Hardcoded workspace ID for demo
-  const WORKSPACE_ID = 123456
+  const WORKSPACE_ID = 842441
 
   useEffect(() => {
     if (memberId) {
@@ -86,7 +86,7 @@ export default function MemberDetail() {
             Back to Dashboard
           </Link>
           <div>
-            <h1 className="text-2xl font-semibold text-gray-900">
+            <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
               {memberReport.member_name}
             </h1>
             <p className="text-sm text-gray-500">
@@ -121,12 +121,12 @@ export default function MemberDetail() {
           <div className="card-body">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Billable Hours</p>
+                <p className="text-sm text-gray-600">Total Hours</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {formatHours(totals.billable_hours)}
+                  {formatHours(totals.total_hours)}
                 </p>
                 <p className="text-sm text-gray-500">
-                  {formatPercentage(totals.billable_percentage || 0)} rate
+                  All hours are billable
                 </p>
               </div>
               <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-success-100">
@@ -226,17 +226,13 @@ export default function MemberDetail() {
                     </td>
                     <td className="table-cell">
                       <span className="text-sm font-medium">
-                        {formatHours(client.billable_hours)}
+                        {formatHours(client.total_hours)}
                       </span>
                     </td>
                     <td className="table-cell">
                       <div className="flex items-center">
                         <span className="text-sm font-medium">
-                          {formatPercentage(
-                            client.total_hours > 0 
-                              ? (client.billable_hours / client.total_hours) * 100 
-                              : 0
-                          )}
+                          100%
                         </span>
                       </div>
                     </td>
@@ -254,7 +250,7 @@ export default function MemberDetail() {
                           {formatCurrency(client.total_earnings_usd || 0, 'USD')}
                         </div>
                         <div className="text-gray-500">
-                          {formatCurrency(client.billable_earnings_usd || 0, 'USD')} billable
+                          All earnings billable
                         </div>
                       </div>
                     </td>
@@ -287,7 +283,7 @@ export default function MemberDetail() {
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">Overall Billable Rate</span>
               <span className="text-lg font-semibold text-gray-900">
-                {formatPercentage(totals.billable_percentage || 0)}
+                100%
               </span>
             </div>
             <div className="flex justify-between items-center">
@@ -323,9 +319,9 @@ export default function MemberDetail() {
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Billable Value (USD)</span>
+              <span className="text-sm text-gray-600">Total Value (USD)</span>
               <span className="text-lg font-semibold text-success-600">
-                {formatCurrency(totals.billable_earnings_usd || 0, 'USD')}
+                {formatCurrency(totals.total_earnings_usd || 0, 'USD')}
               </span>
             </div>
             <div className="flex justify-between items-center">
@@ -363,7 +359,7 @@ export default function MemberDetail() {
                   <div key={client.client_id || 'no-client'} className="flex items-center">
                     <div className="flex-1">
                       <div className="flex justify-between text-sm mb-1">
-                        <span className="font-medium text-gray-900">{client.client_name}</span>
+                        <span className="font-medium text-gray-900 dark:text-gray-100">{client.client_name}</span>
                         <span className="text-gray-500">
                           {formatHours(client.total_hours)} ({formatPercentage(percentage)})
                         </span>

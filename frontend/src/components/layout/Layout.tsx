@@ -26,17 +26,17 @@ export default function Layout({ children }: LayoutProps) {
   const location = useLocation()
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Sidebar */}
-      <div className="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg">
+      <div className="fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-800 shadow-lg">
         <div className="flex h-full flex-col">
           {/* Logo */}
-          <div className="flex h-16 items-center justify-center border-b border-gray-200 px-4">
+          <div className="flex h-16 items-center justify-center border-b border-gray-200 dark:border-gray-700 px-4">
             <div className="flex items-center space-x-2">
               <div className="flex h-8 w-8 items-center justify-center rounded bg-primary-500">
                 <Clock className="h-5 w-5 text-white" />
               </div>
-              <div className="text-lg font-semibold text-gray-900">
+              <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                 Toggl Reports
               </div>
             </div>
@@ -53,14 +53,14 @@ export default function Layout({ children }: LayoutProps) {
                   className={clsx(
                     'group flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors',
                     isActive
-                      ? 'bg-primary-50 text-primary-700 border-r-2 border-primary-500'
-                      : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                      ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 border-r-2 border-primary-500'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100'
                   )}
                 >
                   <item.icon
                     className={clsx(
                       'mr-3 h-5 w-5 flex-shrink-0',
-                      isActive ? 'text-primary-500' : 'text-gray-400 group-hover:text-gray-500'
+                      isActive ? 'text-primary-500 dark:text-primary-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-500 dark:group-hover:text-gray-400'
                     )}
                   />
                   {item.name}
@@ -70,8 +70,8 @@ export default function Layout({ children }: LayoutProps) {
           </nav>
 
           {/* Footer */}
-          <div className="border-t border-gray-200 p-4">
-            <div className="text-xs text-gray-500">
+          <div className="border-t border-gray-200 dark:border-gray-700 p-4">
+            <div className="text-xs text-gray-500 dark:text-gray-400">
               <div className="flex items-center justify-between">
                 <span>Version 2.0.0</span>
                 <div className="flex items-center space-x-1">
@@ -87,21 +87,21 @@ export default function Layout({ children }: LayoutProps) {
       {/* Main content */}
       <div className="pl-64">
         {/* Top header */}
-        <header className="bg-white shadow-sm border-b border-gray-200">
+        <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
           <div className="px-6 py-4">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-2xl font-semibold text-gray-900">
+                <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
                   {getPageTitle(location.pathname)}
                 </h1>
-                <p className="mt-1 text-sm text-gray-500">
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                   {getPageDescription(location.pathname)}
                 </p>
               </div>
               
               <div className="flex items-center space-x-4">
                 {/* Quick stats */}
-                <div className="hidden md:flex items-center space-x-6 text-sm text-gray-500">
+                <div className="hidden md:flex items-center space-x-6 text-sm text-gray-500 dark:text-gray-400">
                   <div className="flex items-center space-x-1">
                     <TrendingUp className="h-4 w-4" />
                     <span>Live Data</span>

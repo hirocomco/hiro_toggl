@@ -7,8 +7,8 @@ from typing import List, Optional
 import os
 from datetime import datetime, timedelta
 
-from toggl_client.toggl_client import TogglClient, MemberTimeTotal, TogglAPIError
-from config.config import TogglConfig
+from toggl_client import EnhancedTogglClient as TogglClient, MemberTimeTotal, TogglAPIError
+from config import TogglConfig
 
 router = APIRouter(prefix="/api/test", tags=["test"])
 

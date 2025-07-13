@@ -12,7 +12,7 @@ from fastapi import Depends
 from app.models.models import Client, Project, Member, TimeEntryCache, SyncLog
 from app.models.database import get_db
 from toggl_client import EnhancedTogglClient as TogglClient, TogglAPIError
-from config.config import TogglConfig
+from config import TogglConfig
 
 
 class SyncService:

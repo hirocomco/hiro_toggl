@@ -63,16 +63,16 @@ CREATE TABLE IF NOT EXISTS rates (
 -- Create time_entries cache table
 CREATE TABLE IF NOT EXISTS time_entries_cache (
     id SERIAL PRIMARY KEY,
-    toggl_id INTEGER UNIQUE NOT NULL,
+    toggl_id BIGINT UNIQUE NOT NULL,
     description TEXT,
     duration INTEGER NOT NULL, -- in seconds
     start_time TIMESTAMP NOT NULL,
     stop_time TIMESTAMP,
-    user_id INTEGER NOT NULL,
+    user_id BIGINT NOT NULL,
     user_name VARCHAR(255),
-    project_id INTEGER,
+    project_id BIGINT,
     project_name VARCHAR(255),
-    client_id INTEGER,
+    client_id BIGINT,
     client_name VARCHAR(255),
     workspace_id INTEGER NOT NULL,
     billable BOOLEAN DEFAULT FALSE,

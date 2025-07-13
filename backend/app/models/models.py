@@ -2,7 +2,7 @@
 SQLAlchemy models for the Toggl Client Reports application.
 """
 
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Date, Numeric, Text, ForeignKey, ARRAY
+from sqlalchemy import Column, Integer, BigInteger, String, Boolean, DateTime, Date, Numeric, Text, ForeignKey, ARRAY
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from datetime import datetime, date
@@ -110,16 +110,16 @@ class TimeEntryCache(Base):
     __tablename__ = "time_entries_cache"
 
     id = Column(Integer, primary_key=True, index=True)
-    toggl_id = Column(Integer, unique=True, nullable=False, index=True)
+    toggl_id = Column(BigInteger, unique=True, nullable=False, index=True)
     description = Column(Text)
     duration = Column(Integer, nullable=False)  # Duration in seconds
     start_time = Column(DateTime, nullable=False, index=True)
     stop_time = Column(DateTime)
-    user_id = Column(Integer, nullable=False, index=True)
+    user_id = Column(BigInteger, nullable=False, index=True)
     user_name = Column(String(255))
-    project_id = Column(Integer, ForeignKey("projects.id"), index=True)
+    project_id = Column(BigInteger, ForeignKey("projects.id"), index=True)
     project_name = Column(String(255))
-    client_id = Column(Integer, index=True)
+    client_id = Column(BigInteger, index=True)
     client_name = Column(String(255))
     workspace_id = Column(Integer, nullable=False, index=True)
     billable = Column(Boolean, default=False)
@@ -160,3 +160,51 @@ class SyncLog(Base):
 
     def __repr__(self):
         return f"<SyncLog(id={self.id}, type={self.sync_type}, status={self.status})>"
+
+
+class Setting(Base):
+    """Database model for application settings with hierarchical scoping."""
+    __tablename__ = "settings"
+
+    id = Column(Integer, primary_key=True, index=True)
+    key = Column(String(100), nullable=False, index=True)
+    value = Column(Text, nullable=False)
+    data_type = Column(String(20), nullable=False, default='string', index=True)  # 'string', 'integer', 'float', 'boolean', 'json'
+    category = Column(String(50), nullable=False, default='general', index=True)  # 'workspace', 'sync', 'ui', 'api', etc.
+    scope = Column(String(20), nullable=False, default='system', index=True)  # 'system', 'workspace', 'client'
+    workspace_id = Column(Integer, nullable=True, index=True)  # NULL for system settings
+    client_id = Column(Integer, ForeignKey("clients.id"), nullable=True, index=True)  # NULL for non-client specific
+    description = Column(String(255))  # Human-readable description
+    is_readonly = Column(Boolean, default=False)  # Prevent modification via API
+    effective_date = Column(Date, nullable=False, default=func.current_date(), index=True)
+    created_at = Column(DateTime, default=func.current_timestamp())
+    updated_at = Column(DateTime, default=func.current_timestamp(), onupdate=func.current_timestamp())
+
+    # Relationships
+    client = relationship("Client", foreign_keys=[client_id])
+
+    # Unique constraint on key, scope, workspace_id, client_id, and effective_date
+    __table_args__ = (
+        {"extend_existing": True}
+    )
+
+    def __repr__(self):
+        scope_info = f"workspace_id={self.workspace_id}" if self.workspace_id else "system"
+        if self.client_id:
+            scope_info += f", client_id={self.client_id}"
+        return f"<Setting(key='{self.key}', {scope_info}, value='{self.value[:50]}...')>"
+
+    @property
+    def typed_value(self):
+        """Get the value converted to its proper type."""
+        if self.data_type == 'integer':
+            return int(self.value)
+        elif self.data_type == 'float':
+            return float(self.value)
+        elif self.data_type == 'boolean':
+            return self.value.lower() in ('true', '1', 'yes', 'on')
+        elif self.data_type == 'json':
+            import json
+            return json.loads(self.value)
+        else:  # string
+            return self.value

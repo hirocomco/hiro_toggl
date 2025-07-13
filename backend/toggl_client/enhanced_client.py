@@ -268,7 +268,12 @@ class EnhancedTogglClient:
         # Implement rate limiting
         self._throttle_request()
         
-        url = urljoin(base_url or self.BASE_URL, endpoint)
+        base = base_url or self.BASE_URL
+        # Ensure base URL ends with / and endpoint doesn't start with / for proper joining
+        if not base.endswith('/'):
+            base += '/'
+        endpoint = endpoint.lstrip('/')
+        url = urljoin(base, endpoint)
         
         try:
             response = self.session.request(

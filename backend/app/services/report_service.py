@@ -203,13 +203,13 @@ class ReportService:
             client_data[client_key]['total_duration'] += entry.duration
             client_data[client_key]['project_ids'].add(entry.project_id)
             
-            if entry.billable:
-                client_data[client_key]['billable_duration'] += entry.duration
+            # All hours are billable - set billable duration equal to total
+            client_data[client_key]['billable_duration'] += entry.duration
 
             # Add to workspace totals
             workspace_totals['total_duration'] += entry.duration
-            if entry.billable:
-                workspace_totals['billable_duration'] += entry.duration
+            # All hours are billable - set billable duration equal to total
+            workspace_totals['billable_duration'] += entry.duration
 
             # Initialize member data within client
             member_key = entry.user_id
@@ -233,8 +233,8 @@ class ReportService:
             member_data['total_duration'] += entry.duration
             member_data['entry_count'] += 1
             
-            if entry.billable:
-                member_data['billable_duration'] += entry.duration
+            # All hours are billable - set billable duration equal to total
+            member_data['billable_duration'] += entry.duration
 
             # Calculate financial data if requested
             if include_financial:
@@ -257,7 +257,7 @@ class ReportService:
                             member_data['hourly_rate_usd'] = rate.hourly_rate_usd
                             member_data['hourly_rate_eur'] = rate.hourly_rate_eur
 
-                        # Calculate earnings
+                        # Calculate earnings - treat all hours as billable
                         if rate.hourly_rate_usd:
                             hours = Decimal(entry.duration) / Decimal(3600)
                             earnings_usd = hours * rate.hourly_rate_usd
@@ -266,10 +266,10 @@ class ReportService:
                             client_data[client_key]['total_earnings_usd'] += earnings_usd
                             workspace_totals['total_earnings_usd'] += earnings_usd
                             
-                            if entry.billable:
-                                member_data['billable_earnings_usd'] += earnings_usd
-                                client_data[client_key]['billable_earnings_usd'] += earnings_usd
-                                workspace_totals['billable_earnings_usd'] += earnings_usd
+                            # All hours are billable - set billable earnings equal to total
+                            member_data['billable_earnings_usd'] += earnings_usd
+                            client_data[client_key]['billable_earnings_usd'] += earnings_usd
+                            workspace_totals['billable_earnings_usd'] += earnings_usd
 
                         if rate.hourly_rate_eur:
                             hours = Decimal(entry.duration) / Decimal(3600)
@@ -279,10 +279,10 @@ class ReportService:
                             client_data[client_key]['total_earnings_eur'] += earnings_eur
                             workspace_totals['total_earnings_eur'] += earnings_eur
                             
-                            if entry.billable:
-                                member_data['billable_earnings_eur'] += earnings_eur
-                                client_data[client_key]['billable_earnings_eur'] += earnings_eur
-                                workspace_totals['billable_earnings_eur'] += earnings_eur
+                            # All hours are billable - set billable earnings equal to total
+                            member_data['billable_earnings_eur'] += earnings_eur
+                            client_data[client_key]['billable_earnings_eur'] += earnings_eur
+                            workspace_totals['billable_earnings_eur'] += earnings_eur
 
         # Convert to report data structures
         client_reports = []
@@ -432,14 +432,14 @@ class ReportService:
             # Add to project totals
             project_data[project_key]['total_duration'] += entry.duration
             project_data[project_key]['entry_count'] += 1
-            if entry.billable:
-                project_data[project_key]['billable_duration'] += entry.duration
+            # All hours are billable - set billable duration equal to total
+            project_data[project_key]['billable_duration'] += entry.duration
 
             # Add to client totals
             client_totals['total_duration'] += entry.duration
             client_totals['entry_count'] += 1
-            if entry.billable:
-                client_totals['billable_duration'] += entry.duration
+            # All hours are billable - set billable duration equal to total
+            client_totals['billable_duration'] += entry.duration
 
             # Handle member data within project
             member_key = entry.user_id
@@ -459,8 +459,8 @@ class ReportService:
             member_data = project_data[project_key]['members'][member_key]
             member_data['total_duration'] += entry.duration
             member_data['entry_count'] += 1
-            if entry.billable:
-                member_data['billable_duration'] += entry.duration
+            # All hours are billable - set billable duration equal to total
+            member_data['billable_duration'] += entry.duration
 
             # Calculate financial data
             member_db = self.db.query(Member).filter(Member.toggl_id == entry.user_id).first()
@@ -483,10 +483,10 @@ class ReportService:
                         project_data[project_key]['total_earnings_usd'] += earnings_usd
                         client_totals['total_earnings_usd'] += earnings_usd
                         
-                        if entry.billable:
-                            member_data['billable_earnings_usd'] += earnings_usd
-                            project_data[project_key]['billable_earnings_usd'] += earnings_usd
-                            client_totals['billable_earnings_usd'] += earnings_usd
+                        # All hours are billable - set billable earnings equal to total
+                        member_data['billable_earnings_usd'] += earnings_usd
+                        project_data[project_key]['billable_earnings_usd'] += earnings_usd
+                        client_totals['billable_earnings_usd'] += earnings_usd
 
                     if rate.hourly_rate_eur:
                         earnings_eur = hours * rate.hourly_rate_eur
@@ -494,10 +494,10 @@ class ReportService:
                         project_data[project_key]['total_earnings_eur'] += earnings_eur
                         client_totals['total_earnings_eur'] += earnings_eur
                         
-                        if entry.billable:
-                            member_data['billable_earnings_eur'] += earnings_eur
-                            project_data[project_key]['billable_earnings_eur'] += earnings_eur
-                            client_totals['billable_earnings_eur'] += earnings_eur
+                        # All hours are billable - set billable earnings equal to total
+                        member_data['billable_earnings_eur'] += earnings_eur
+                        project_data[project_key]['billable_earnings_eur'] += earnings_eur
+                        client_totals['billable_earnings_eur'] += earnings_eur
 
         # Format response
         projects = []
@@ -632,14 +632,14 @@ class ReportService:
             # Add to client totals
             client_data[client_key]['total_duration'] += entry.duration
             client_data[client_key]['entry_count'] += 1
-            if entry.billable:
-                client_data[client_key]['billable_duration'] += entry.duration
+            # All hours are billable - set billable duration equal to total
+            client_data[client_key]['billable_duration'] += entry.duration
 
             # Add to member totals
             member_totals['total_duration'] += entry.duration
             member_totals['entry_count'] += 1
-            if entry.billable:
-                member_totals['billable_duration'] += entry.duration
+            # All hours are billable - set billable duration equal to total
+            member_totals['billable_duration'] += entry.duration
 
             # Calculate earnings
             work_date = entry.start_time.date()
@@ -664,18 +664,18 @@ class ReportService:
                     client_data[client_key]['total_earnings_usd'] += earnings_usd
                     member_totals['total_earnings_usd'] += earnings_usd
                     
-                    if entry.billable:
-                        client_data[client_key]['billable_earnings_usd'] += earnings_usd
-                        member_totals['billable_earnings_usd'] += earnings_usd
+                    # All hours are billable - set billable earnings equal to total
+                    client_data[client_key]['billable_earnings_usd'] += earnings_usd
+                    member_totals['billable_earnings_usd'] += earnings_usd
 
                 if rate.hourly_rate_eur:
                     earnings_eur = hours * rate.hourly_rate_eur
                     client_data[client_key]['total_earnings_eur'] += earnings_eur
                     member_totals['total_earnings_eur'] += earnings_eur
                     
-                    if entry.billable:
-                        client_data[client_key]['billable_earnings_eur'] += earnings_eur
-                        member_totals['billable_earnings_eur'] += earnings_eur
+                    # All hours are billable - set billable earnings equal to total
+                    client_data[client_key]['billable_earnings_eur'] += earnings_eur
+                    member_totals['billable_earnings_eur'] += earnings_eur
 
         # Format client breakdown
         clients = []
