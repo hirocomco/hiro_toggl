@@ -38,7 +38,7 @@ export default function Dashboard() {
   const [selectedPeriod, setSelectedPeriod] = useState('last_30_days')
 
   // Hardcoded workspace ID for demo - in real app this would come from user settings
-  const WORKSPACE_ID = 123456
+  const WORKSPACE_ID = 842441
 
   useEffect(() => {
     loadDashboardData()
@@ -123,10 +123,10 @@ export default function Dashboard() {
       {/* Period Selector */}
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-lg font-semibold text-gray-900">
+          <h2 className="text-lg font-semibold text-primary">
             {date_range.description || 'Custom Period'}
           </h2>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-muted">
             {date_range.start} to {date_range.end}
           </p>
         </div>
@@ -153,22 +153,22 @@ export default function Dashboard() {
           <div className="card-body">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Total Hours</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-sm text-secondary">Total Hours</p>
+                <p className="text-2xl font-bold text-primary">
                   {formatHours(totals.total_hours)}
                 </p>
-                <p className="text-sm text-gray-500">
-                  {formatHours(totals.billable_hours)} billable
+                <p className="text-sm text-muted">
+                  All hours are billable
                 </p>
               </div>
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary-100">
-                <Clock className="h-6 w-6 text-primary-600" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary-100 dark:bg-primary-900/30">
+                <Clock className="h-6 w-6 text-primary-600 dark:text-primary-400" />
               </div>
             </div>
             <div className="mt-4">
               <div className="flex items-center text-sm">
-                <span className="text-gray-600">Billable Rate:</span>
-                <span className="ml-2 font-medium text-gray-900">
+                <span className="text-secondary">Billable Rate:</span>
+                <span className="ml-2 font-medium text-primary">
                   {formatPercentage(totals.billable_percentage || 0)}
                 </span>
               </div>
@@ -181,22 +181,22 @@ export default function Dashboard() {
           <div className="card-body">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Total Earnings</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-sm text-secondary">Total Earnings</p>
+                <p className="text-2xl font-bold text-primary">
                   {formatCurrency(totals.total_earnings_usd || 0, 'USD')}
                 </p>
-                <p className="text-sm text-gray-500">
-                  {formatCurrency(totals.billable_earnings_usd || 0, 'USD')} billable
+                <p className="text-sm text-muted">
+                  All earnings are billable
                 </p>
               </div>
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-success-100">
-                <DollarSign className="h-6 w-6 text-success-600" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-success-100 dark:bg-success-900/30">
+                <DollarSign className="h-6 w-6 text-success-600 dark:text-success-400" />
               </div>
             </div>
             <div className="mt-4">
               <div className="flex items-center text-sm">
-                <span className="text-gray-600">Avg Rate:</span>
-                <span className="ml-2 font-medium text-gray-900">
+                <span className="text-secondary">Avg Rate:</span>
+                <span className="ml-2 font-medium text-primary">
                   {formatCurrency(totals.average_hourly_rate_usd || 0, 'USD')}/hr
                 </span>
               </div>
@@ -209,22 +209,22 @@ export default function Dashboard() {
           <div className="card-body">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Active Clients</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-sm text-secondary">Active Clients</p>
+                <p className="text-2xl font-bold text-primary">
                   {summary.clients_with_time}
                 </p>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-muted">
                   of {summary.total_clients} total
                 </p>
               </div>
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-warning-100">
-                <Users className="h-6 w-6 text-warning-600" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-warning-100 dark:bg-warning-900/30">
+                <Users className="h-6 w-6 text-warning-600 dark:text-warning-400" />
               </div>
             </div>
             <div className="mt-4">
               <div className="flex items-center text-sm">
-                <span className="text-gray-600">Coverage:</span>
-                <span className="ml-2 font-medium text-gray-900">
+                <span className="text-secondary">Coverage:</span>
+                <span className="ml-2 font-medium text-primary">
                   {formatPercentage((summary.clients_with_time / summary.total_clients) * 100)}
                 </span>
               </div>
@@ -237,22 +237,22 @@ export default function Dashboard() {
           <div className="card-body">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Team Members</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-sm text-secondary">Team Members</p>
+                <p className="text-2xl font-bold text-primary">
                   {summary.total_members}
                 </p>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-muted">
                   {totals.entry_count} entries
                 </p>
               </div>
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-purple-100">
-                <TrendingUp className="h-6 w-6 text-purple-600" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-purple-100 dark:bg-purple-900/30">
+                <TrendingUp className="h-6 w-6 text-purple-600 dark:text-purple-400" />
               </div>
             </div>
             <div className="mt-4">
               <div className="flex items-center text-sm">
-                <span className="text-gray-600">Avg/Member:</span>
-                <span className="ml-2 font-medium text-gray-900">
+                <span className="text-secondary">Avg/Member:</span>
+                <span className="ml-2 font-medium text-primary">
                   {formatHours(totals.total_hours / summary.total_members)}
                 </span>
               </div>
@@ -266,8 +266,8 @@ export default function Dashboard() {
         {/* Client Hours Bar Chart */}
         <div className="card">
           <div className="card-header">
-            <h3 className="text-lg font-semibold">Top Clients by Hours</h3>
-            <p className="text-sm text-gray-500">Total and billable hours comparison</p>
+            <h3 className="text-lg font-semibold text-primary">Top Clients by Hours</h3>
+            <p className="text-sm text-muted">All tracked hours are billable</p>
           </div>
           <div className="card-body">
             <div className="h-80">
@@ -285,15 +285,14 @@ export default function Dashboard() {
                   <Tooltip 
                     formatter={(value, name) => [
                       `${formatHours(value as number)}`,
-                      name === 'hours' ? 'Total Hours' : 'Billable Hours'
+                      'Billable Hours'
                     ]}
                     labelFormatter={(label) => {
                       const client = topClientsData.find(c => c.name === label)
                       return client?.fullName || label
                     }}
                   />
-                  <Bar dataKey="hours" fill="#0ea5e9" name="Total" />
-                  <Bar dataKey="billable" fill="#22c55e" name="Billable" />
+                  <Bar dataKey="hours" fill="#22c55e" name="Billable" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -303,8 +302,8 @@ export default function Dashboard() {
         {/* Client Distribution Pie Chart */}
         <div className="card">
           <div className="card-header">
-            <h3 className="text-lg font-semibold">Time Distribution</h3>
-            <p className="text-sm text-gray-500">Hours breakdown by client</p>
+            <h3 className="text-lg font-semibold text-primary">Time Distribution</h3>
+            <p className="text-sm text-muted">Hours breakdown by client</p>
           </div>
           <div className="card-body">
             <div className="h-80">
@@ -336,11 +335,11 @@ export default function Dashboard() {
                       className="w-3 h-3 rounded-full"
                       style={{ backgroundColor: item.color }}
                     />
-                    <span className="text-gray-700 truncate max-w-32">
+                    <span className="text-secondary truncate max-w-32">
                       {item.name}
                     </span>
                   </div>
-                  <span className="font-medium text-gray-900">
+                  <span className="font-medium text-primary">
                     {formatHours(item.value)}
                   </span>
                 </div>
@@ -355,8 +354,8 @@ export default function Dashboard() {
         <div className="card-header">
           <div className="flex justify-between items-center">
             <div>
-              <h3 className="text-lg font-semibold">Client Performance</h3>
-              <p className="text-sm text-gray-500">
+              <h3 className="text-lg font-semibold text-primary">Client Performance</h3>
+              <p className="text-sm text-muted">
                 Detailed breakdown of all clients with activity
               </p>
             </div>
@@ -397,29 +396,29 @@ export default function Dashboard() {
                           </div>
                         </div>
                         <div className="ml-3">
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-sm font-medium text-primary">
                             {client.client_name}
                           </div>
-                          <div className="text-sm text-gray-500">
+                          <div className="text-sm text-muted">
                             {client.member_reports.length} team member{client.member_reports.length !== 1 ? 's' : ''}
                           </div>
                         </div>
                       </div>
                     </td>
                     <td className="table-cell">
-                      <span className="text-sm font-medium">
+                      <span className="text-sm font-medium text-primary">
                         {formatHours(client.total_hours)}
                       </span>
                     </td>
                     <td className="table-cell">
-                      <span className="text-sm font-medium">
+                      <span className="text-sm font-medium text-primary">
                         {formatHours(client.billable_hours)}
                       </span>
                     </td>
                     <td className="table-cell">
                       <div className="flex items-center">
                         <div className="flex items-center space-x-1">
-                          <span className="text-sm font-medium">
+                          <span className="text-sm font-medium text-primary">
                             {formatPercentage(client.billable_percentage || 0)}
                           </span>
                           {(client.billable_percentage || 0) >= 80 ? (
@@ -432,11 +431,11 @@ export default function Dashboard() {
                     </td>
                     <td className="table-cell">
                       <div className="text-sm">
-                        <div className="font-medium text-gray-900">
+                        <div className="font-medium text-primary">
                           {formatCurrency(client.total_earnings_usd || 0, 'USD')}
                         </div>
-                        <div className="text-gray-500">
-                          {formatCurrency(client.billable_earnings_usd || 0, 'USD')} billable
+                        <div className="text-muted">
+                          All earnings billable
                         </div>
                       </div>
                     </td>

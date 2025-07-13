@@ -15,7 +15,7 @@ export default function ClientDetail() {
   const [error, setError] = useState<string | null>(null)
 
   // Hardcoded workspace ID for demo
-  const WORKSPACE_ID = 123456
+  const WORKSPACE_ID = 842441
 
   useEffect(() => {
     if (clientId) {
@@ -87,10 +87,10 @@ export default function ClientDetail() {
             Back to Dashboard
           </Link>
           <div>
-            <h1 className="text-2xl font-semibold text-gray-900">
+            <h1 className="text-2xl font-semibold text-primary">
               {clientReport.client_name}
             </h1>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-muted">
               {date_range.description} • {projects.length} project{projects.length !== 1 ? 's' : ''}
             </p>
           </div>
@@ -103,11 +103,11 @@ export default function ClientDetail() {
           <div className="card-body">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Total Hours</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-sm text-secondary">Total Hours</p>
+                <p className="text-2xl font-bold text-primary">
                   {formatHours(totals.total_hours)}
                 </p>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-muted">
                   {totals.entry_count} entries
                 </p>
               </div>
@@ -122,12 +122,12 @@ export default function ClientDetail() {
           <div className="card-body">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Billable Hours</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {formatHours(totals.billable_hours)}
+                <p className="text-sm text-secondary">Total Hours</p>
+                <p className="text-2xl font-bold text-primary">
+                  {formatHours(totals.total_hours)}
                 </p>
-                <p className="text-sm text-gray-500">
-                  {formatPercentage(totals.billable_percentage || 0)} billable
+                <p className="text-sm text-muted">
+                  All hours are billable
                 </p>
               </div>
               <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-success-100">
@@ -141,11 +141,11 @@ export default function ClientDetail() {
           <div className="card-body">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Total Earnings</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-sm text-secondary">Total Earnings</p>
+                <p className="text-2xl font-bold text-primary">
                   {formatCurrency(totals.total_earnings_usd || 0, 'USD')}
                 </p>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-muted">
                   {formatCurrency(totals.total_earnings_eur || 0, 'EUR')}
                 </p>
               </div>
@@ -160,11 +160,11 @@ export default function ClientDetail() {
           <div className="card-body">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Team Members</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-sm text-secondary">Team Members</p>
+                <p className="text-2xl font-bold text-primary">
                   {Array.from(new Set(projects.flatMap(p => p.members.map(m => m.member_id)))).length}
                 </p>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-muted">
                   across {projects.length} projects
                 </p>
               </div>
@@ -179,8 +179,8 @@ export default function ClientDetail() {
       {/* Project Breakdown */}
       <div className="card">
         <div className="card-header">
-          <h3 className="text-lg font-semibold">Project Breakdown</h3>
-          <p className="text-sm text-gray-500">
+          <h3 className="text-lg font-semibold text-primary">Project Breakdown</h3>
+          <p className="text-sm text-muted">
             Time allocation and earnings by project
           </p>
         </div>
@@ -191,20 +191,20 @@ export default function ClientDetail() {
                 {/* Project Header */}
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <h4 className="text-lg font-medium text-gray-900">
+                    <h4 className="text-lg font-medium text-primary">
                       {project.project_name}
                     </h4>
-                    <div className="flex items-center space-x-4 text-sm text-gray-500">
-                      <span>{formatHours(project.total_hours)} total</span>
-                      <span>{formatHours(project.billable_hours)} billable</span>
+                    <div className="flex items-center space-x-4 text-sm text-muted">
+                      <span>{formatHours(project.total_hours)} hours</span>
+                      <span>All billable</span>
                       <span>{project.members.length} member{project.members.length !== 1 ? 's' : ''}</span>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-lg font-semibold text-gray-900">
+                    <div className="text-lg font-semibold text-primary">
                       {formatCurrency(project.total_earnings_usd || 0, 'USD')}
                     </div>
-                    <div className="text-sm text-gray-500">
+                    <div className="text-sm text-muted">
                       {formatCurrency(project.total_earnings_eur || 0, 'EUR')}
                     </div>
                   </div>
@@ -215,11 +215,11 @@ export default function ClientDetail() {
                   <table className="min-w-full">
                     <thead>
                       <tr className="border-b border-gray-200">
-                        <th className="text-left py-2 text-sm font-medium text-gray-600">Member</th>
-                        <th className="text-right py-2 text-sm font-medium text-gray-600">Hours</th>
-                        <th className="text-right py-2 text-sm font-medium text-gray-600">Billable</th>
-                        <th className="text-right py-2 text-sm font-medium text-gray-600">Rate (USD)</th>
-                        <th className="text-right py-2 text-sm font-medium text-gray-600">Earnings</th>
+                        <th className="text-left py-2 text-sm font-medium text-secondary">Member</th>
+                        <th className="text-right py-2 text-sm font-medium text-secondary">Hours</th>
+                        <th className="text-right py-2 text-sm font-medium text-secondary">Billable</th>
+                        <th className="text-right py-2 text-sm font-medium text-secondary">Rate (USD)</th>
+                        <th className="text-right py-2 text-sm font-medium text-secondary">Earnings</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -233,10 +233,10 @@ export default function ClientDetail() {
                               {member.member_name}
                             </Link>
                           </td>
-                          <td className="text-right py-2 text-sm text-gray-900">
+                          <td className="text-right py-2 text-sm text-primary">
                             {formatHours(member.total_hours)}
                           </td>
-                          <td className="text-right py-2 text-sm text-gray-900">
+                          <td className="text-right py-2 text-sm text-primary">
                             {formatHours(member.billable_hours)}
                           </td>
                           <td className="text-right py-2 text-sm text-money">
@@ -246,11 +246,11 @@ export default function ClientDetail() {
                             }
                           </td>
                           <td className="text-right py-2">
-                            <div className="text-sm font-medium text-gray-900">
+                            <div className="text-sm font-medium text-primary">
                               {formatCurrency(member.total_earnings_usd || 0, 'USD')}
                             </div>
-                            <div className="text-xs text-gray-500">
-                              {formatCurrency(member.billable_earnings_usd || 0, 'USD')} billable
+                            <div className="text-xs text-muted">
+                              All earnings billable
                             </div>
                           </td>
                         </tr>
@@ -263,7 +263,7 @@ export default function ClientDetail() {
 
             {projects.length === 0 && (
               <div className="text-center py-8">
-                <p className="text-gray-500">No project data available for this period.</p>
+                <p className="text-muted">No project data available for this period.</p>
               </div>
             )}
           </div>
@@ -274,24 +274,24 @@ export default function ClientDetail() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="card">
           <div className="card-header">
-            <h3 className="text-lg font-semibold">Performance Metrics</h3>
+            <h3 className="text-lg font-semibold text-primary">Performance Metrics</h3>
           </div>
           <div className="card-body space-y-4">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Billable Rate</span>
-              <span className="text-lg font-semibold text-gray-900">
-                {formatPercentage(totals.billable_percentage || 0)}
+              <span className="text-sm text-secondary">Billable Rate</span>
+              <span className="text-lg font-semibold text-primary">
+                100%
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Average Hourly Rate</span>
+              <span className="text-sm text-secondary">Average Hourly Rate</span>
               <span className="text-lg font-semibold text-money">
                 {formatCurrency(totals.average_hourly_rate_usd || 0, 'USD')}/hr
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Entries per Day</span>
-              <span className="text-lg font-semibold text-gray-900">
+              <span className="text-sm text-secondary">Entries per Day</span>
+              <span className="text-lg font-semibold text-primary">
                 {(totals.entry_count / 30).toFixed(1)}
               </span>
             </div>
@@ -300,23 +300,23 @@ export default function ClientDetail() {
 
         <div className="card">
           <div className="card-header">
-            <h3 className="text-lg font-semibold">Financial Summary</h3>
+            <h3 className="text-lg font-semibold text-primary">Financial Summary</h3>
           </div>
           <div className="card-body space-y-4">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Total Value (USD)</span>
+              <span className="text-sm text-secondary">Total Value (USD)</span>
               <span className="text-lg font-semibold text-success-600">
                 {formatCurrency(totals.total_earnings_usd || 0, 'USD')}
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Billable Value (USD)</span>
+              <span className="text-sm text-secondary">Total Value (USD)</span>
               <span className="text-lg font-semibold text-success-600">
-                {formatCurrency(totals.billable_earnings_usd || 0, 'USD')}
+                {formatCurrency(totals.total_earnings_usd || 0, 'USD')}
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Total Value (EUR)</span>
+              <span className="text-sm text-secondary">Total Value (EUR)</span>
               <span className="text-lg font-semibold text-primary-600">
                 {formatCurrency(totals.total_earnings_eur || 0, 'EUR')}
               </span>

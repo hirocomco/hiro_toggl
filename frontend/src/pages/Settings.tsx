@@ -15,15 +15,17 @@ import {
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import ErrorMessage from '@/components/ui/ErrorMessage'
 import { apiService } from '@/services/api'
+import { settingsHelpers } from '@/services/settingsApi'
+import { useTheme } from '@/contexts/ThemeContext'
 
 export default function Settings() {
+  const { theme, setTheme } = useTheme()
   const [settings, setSettings] = useState({
-    workspace_id: '123456',
+    workspace_id: '842441',
     default_currency: 'USD',
     sync_interval: 30,
     auto_sync: true,
-    notifications: true,
-    theme: 'light'
+    notifications: true
   })
   const [syncStatus, setSyncStatus] = useState<{
     last_sync: string | null
@@ -47,16 +49,30 @@ export default function Settings() {
       setLoading(true)
       setError(null)
       
-      // In a real app, this would load from backend
-      // For now, we'll just simulate loading
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      const savedSettings = localStorage.getItem('toggl-settings')
-      if (savedSettings) {
-        setSettings(JSON.parse(savedSettings))
+      // Try to load from backend first (system-level settings)
+      try {
+        console.log('Attempting to load settings from backend...')
+        // First, try to get system-level settings without workspace_id
+        const config = await settingsHelpers.getAppConfig()
+        console.log('Successfully loaded settings from backend:', config)
+        setSettings(config)
+      } catch (backendError) {
+        console.error('Failed to load from backend:', backendError)
+        console.warn('Falling back to localStorage...')
+        
+        // Fall back to localStorage
+        const savedSettings = localStorage.getItem('toggl-settings')
+        if (savedSettings) {
+          const localConfig = JSON.parse(savedSettings)
+          setSettings(localConfig)
+          console.log('Loaded settings from localStorage:', localConfig)
+        } else {
+          console.log('No localStorage settings found, using defaults')
+        }
       }
     } catch (err: any) {
       setError('Failed to load settings')
+      console.error('Settings loading error:', err)
     } finally {
       setLoading(false)
     }
@@ -84,24 +100,39 @@ export default function Settings() {
     try {
       setSaving(true)
       
-      // Save to localStorage (in real app, would save to backend)
-      localStorage.setItem('toggl-settings', JSON.stringify(settings))
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      // Show success message briefly
-      setSyncStatus({
-        ...syncStatus,
-        status: 'success',
-        message: 'Settings saved successfully'
-      })
+      // Try to save to backend first (system-level for now)
+      try {
+        console.log('Attempting to save settings to backend:', settings)
+        await settingsHelpers.saveAppConfig(settings)
+        console.log('Successfully saved settings to backend')
+        
+        // Show success message
+        setSyncStatus({
+          ...syncStatus,
+          status: 'success',
+          message: 'Settings saved successfully to server'
+        })
+      } catch (backendError) {
+        console.error('Failed to save to backend:', backendError)
+        console.warn('Falling back to localStorage...')
+        
+        // Fall back to localStorage
+        localStorage.setItem('toggl-settings', JSON.stringify(settings))
+        console.log('Saved settings to localStorage as fallback')
+        
+        setSyncStatus({
+          ...syncStatus,
+          status: 'success',
+          message: 'Settings saved locally (server unavailable)'
+        })
+      }
       
       setTimeout(() => {
         setSyncStatus(prev => ({ ...prev, status: 'idle' }))
       }, 3000)
     } catch (err: any) {
       setError('Failed to save settings')
+      console.error('Settings save error:', err)
     } finally {
       setSaving(false)
     }
@@ -159,8 +190,8 @@ export default function Settings() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900">Settings</h2>
-          <p className="text-sm text-gray-500">
+          <h2 className="text-xl font-semibold text-primary">Settings</h2>
+          <p className="text-sm text-muted">
             Configure your workspace preferences and data sync options
           </p>
         </div>
@@ -182,14 +213,14 @@ export default function Settings() {
       <div className="card">
         <div className="card-header">
           <div className="flex items-center space-x-2">
-            <User className="h-5 w-5 text-gray-500" />
-            <h3 className="text-lg font-semibold">Workspace Configuration</h3>
+            <User className="h-5 w-5 text-muted" />
+            <h3 className="text-lg font-semibold text-primary">Workspace Configuration</h3>
           </div>
         </div>
         <div className="card-body space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-secondary mb-1">
                 Workspace ID
               </label>
               <input
@@ -199,12 +230,12 @@ export default function Settings() {
                 className="form-input"
                 placeholder="Your Toggl workspace ID"
               />
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-muted mt-1">
                 Find this in your Toggl workspace settings
               </p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-secondary mb-1">
                 Default Currency
               </label>
               <select
@@ -226,17 +257,17 @@ export default function Settings() {
       <div className="card">
         <div className="card-header">
           <div className="flex items-center space-x-2">
-            <Database className="h-5 w-5 text-gray-500" />
-            <h3 className="text-lg font-semibold">Data Synchronization</h3>
+            <Database className="h-5 w-5 text-muted" />
+            <h3 className="text-lg font-semibold text-primary">Data Synchronization</h3>
           </div>
         </div>
         <div className="card-body space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <label className="text-sm font-medium text-gray-700">
+              <label className="text-sm font-medium text-secondary">
                 Automatic Sync
               </label>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-muted">
                 Automatically sync data from Toggl at regular intervals
               </p>
             </div>
@@ -253,7 +284,7 @@ export default function Settings() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-secondary mb-1">
                 Sync Interval (minutes)
               </label>
               <select
@@ -270,7 +301,7 @@ export default function Settings() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-secondary mb-1">
                 Last Sync
               </label>
               <div className="flex items-center space-x-2">
@@ -284,7 +315,7 @@ export default function Settings() {
                   {syncStatus.status === 'error' && (
                     <AlertCircle className="h-4 w-4 text-red-500" />
                   )}
-                  <span className="text-sm text-gray-600">
+                  <span className="text-sm text-secondary">
                     {syncStatus.last_sync 
                       ? new Date(syncStatus.last_sync).toLocaleString()
                       : 'Never'
@@ -297,7 +328,7 @@ export default function Settings() {
 
           <div className="flex items-center justify-between pt-4 border-t">
             <div>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-secondary">
                 {syncStatus.message || 'Ready to sync'}
               </p>
             </div>
@@ -321,19 +352,19 @@ export default function Settings() {
       <div className="card">
         <div className="card-header">
           <div className="flex items-center space-x-2">
-            <SettingsIcon className="h-5 w-5 text-gray-500" />
-            <h3 className="text-lg font-semibold">Interface Preferences</h3>
+            <SettingsIcon className="h-5 w-5 text-muted" />
+            <h3 className="text-lg font-semibold text-primary">Interface Preferences</h3>
           </div>
         </div>
         <div className="card-body space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-secondary mb-1">
                 Theme
               </label>
               <select
-                value={settings.theme}
-                onChange={(e) => setSettings(prev => ({ ...prev, theme: e.target.value }))}
+                value={theme}
+                onChange={(e) => setTheme(e.target.value as 'light' | 'dark' | 'auto')}
                 className="form-select"
               >
                 <option value="light">Light</option>
@@ -343,10 +374,10 @@ export default function Settings() {
             </div>
             <div className="flex items-center justify-between">
               <div>
-                <label className="text-sm font-medium text-gray-700">
+                <label className="text-sm font-medium text-secondary">
                   Notifications
                 </label>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-muted">
                   Show desktop notifications for sync events
                 </p>
               </div>
@@ -368,8 +399,8 @@ export default function Settings() {
       <div className="card">
         <div className="card-header">
           <div className="flex items-center space-x-2">
-            <Key className="h-5 w-5 text-gray-500" />
-            <h3 className="text-lg font-semibold">API Configuration</h3>
+            <Key className="h-5 w-5 text-muted" />
+            <h3 className="text-lg font-semibold text-primary">API Configuration</h3>
           </div>
         </div>
         <div className="card-body">
@@ -396,37 +427,37 @@ export default function Settings() {
       <div className="card">
         <div className="card-header">
           <div className="flex items-center space-x-2">
-            <Globe className="h-5 w-5 text-gray-500" />
-            <h3 className="text-lg font-semibold">System Information</h3>
+            <Globe className="h-5 w-5 text-muted" />
+            <h3 className="text-lg font-semibold text-primary">System Information</h3>
           </div>
         </div>
         <div className="card-body">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div className="space-y-2">
               <div className="flex justify-between">
-                <span className="text-gray-600">Application Version:</span>
-                <span className="font-medium">1.0.0</span>
+                <span className="text-secondary">Application Version:</span>
+                <span className="font-medium text-primary">1.0.0</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Backend Status:</span>
+                <span className="text-secondary">Backend Status:</span>
                 <span className="font-medium text-green-600">Connected</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Database Status:</span>
+                <span className="text-secondary">Database Status:</span>
                 <span className="font-medium text-green-600">Healthy</span>
               </div>
             </div>
             <div className="space-y-2">
               <div className="flex justify-between">
-                <span className="text-gray-600">Toggl API Status:</span>
+                <span className="text-secondary">Toggl API Status:</span>
                 <span className="font-medium text-green-600">Connected</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Rate Limit:</span>
-                <span className="font-medium">1 req/sec</span>
+                <span className="text-secondary">Rate Limit:</span>
+                <span className="font-medium text-primary">1 req/sec</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Cache Status:</span>
+                <span className="text-secondary">Cache Status:</span>
                 <span className="font-medium text-blue-600">Active</span>
               </div>
             </div>
