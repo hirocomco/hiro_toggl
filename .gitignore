@@ -74,6 +74,10 @@ src/.smbdelete*
 
 # Development files
 simple_backend.py
+compare_api_database.py
+simplified_comparison.py
+test_api_comparison.py
+CLAUDE.md
 
 # Node modules
 node_modules/
