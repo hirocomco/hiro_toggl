@@ -473,45 +473,68 @@ class EnhancedTogglClient:
         if end_date:
             params['end_date'] = end_date
         
-        # Add pagination support
-        params['first_row_number'] = 1
-        params['max_rows'] = 1000  # Adjust as needed
+        # Implement pagination to get all entries (API returns max 50 per request)
+        entries = []
+        page = 1
+        page_size = 50
         
         try:
-            response = self._make_request(
-                'POST', endpoint, 
-                base_url=self.REPORTS_BASE_URL,
-                data=params
-            )
-            
-            entries = []
-            time_entries = response.get('data', [])
-            
-            for entry_data in time_entries:
-                project_id = entry_data.get('pid')
+            while True:
+                # Set pagination parameters
+                params['first_row_number'] = ((page - 1) * page_size) + 1
+                params['max_rows'] = page_size
                 
-                # Get client info from mapping
-                client_info = client_mapping.get(project_id, {
-                    'client_id': None,
-                    'client_name': 'No Client'
-                })
+                response = self._make_request(
+                    'POST', endpoint, 
+                    base_url=self.REPORTS_BASE_URL,
+                    data=params
+                )
                 
-                entries.append(TimeEntry(
-                    id=entry_data.get('id', 0),
-                    description=entry_data.get('description', ''),
-                    duration=entry_data.get('dur', 0) // 1000,  # Convert from milliseconds
-                    start=entry_data.get('start', ''),
-                    stop=entry_data.get('end', ''),
-                    user_id=entry_data.get('uid', 0),
-                    user_name=entry_data.get('user', ''),
-                    project_id=project_id,
-                    project_name=entry_data.get('project', ''),
-                    workspace_id=workspace_id,
-                    billable=entry_data.get('is_billable', False),
-                    tags=entry_data.get('tags', []),
-                    client_id=client_info['client_id'],
-                    client_name=client_info['client_name']
-                ))
+                # Handle both dict response with 'data' key and direct list response
+                if isinstance(response, dict):
+                    time_entries = response.get('data', [])
+                else:
+                    time_entries = response
+                
+                # Process entries from this page
+                for entry_data in time_entries:
+                    project_id = entry_data.get('project_id')
+                    
+                    # Get client info from mapping
+                    client_info = client_mapping.get(project_id, {
+                        'client_id': None,
+                        'client_name': 'No Client'
+                    })
+                    
+                    # Handle nested time_entries structure from Reports API
+                    for time_entry in entry_data.get('time_entries', []):
+                        entries.append(TimeEntry(
+                            id=time_entry.get('id', 0),
+                            description=entry_data.get('description', ''),
+                            duration=time_entry.get('seconds', 0),  # Reports API uses 'seconds'
+                            start=time_entry.get('start', ''),
+                            stop=time_entry.get('stop', ''),
+                            user_id=entry_data.get('user_id', 0),
+                            user_name=entry_data.get('username', ''),
+                            project_id=entry_data.get('project_id'),  # Use actual Toggl project ID
+                            project_name='',  # Project name not directly available in this format
+                            workspace_id=workspace_id,
+                            billable=entry_data.get('billable', False),
+                            tags=entry_data.get('tag_ids', []),
+                            client_id=client_info['client_id'],
+                            client_name=client_info['client_name']
+                        ))
+                
+                # If we got less than page_size entries, we're done
+                if len(time_entries) < page_size:
+                    break
+                
+                page += 1
+                
+                # Safety check to prevent infinite loops
+                if page > 100:  # Max 5000 entries (100 pages * 50)
+                    self.logger.warning(f"Reached maximum page limit (100) for time entries")
+                    break
             
             return entries
             

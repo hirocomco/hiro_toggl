@@ -11,8 +11,8 @@ from pydantic import BaseModel, Field
 from app.models.database import get_db
 from app.services.sync_service import SyncService, get_sync_service
 from app.models.models import SyncLog
-from toggl_client.toggl_client import TogglClient, TogglAPIError
-from config.config import TogglConfig
+from toggl_client import EnhancedTogglClient as TogglClient, TogglAPIError
+from config.config.config import TogglConfig
 
 
 router = APIRouter(prefix="/api/sync", tags=["sync"])
@@ -21,7 +21,7 @@ router = APIRouter(prefix="/api/sync", tags=["sync"])
 # Pydantic models for request/response
 class SyncRequest(BaseModel):
     workspace_id: int
-    sync_type: Optional[str] = Field(None, pattern="^(clients|projects|members|time_entries|full)$")
+    sync_type: Optional[str] = Field(None, pattern="^(clients|projects|members|time_entries|full|metadata|time_entries_only)$")
     start_date: Optional[date] = None
     end_date: Optional[date] = None
     time_entries_days: Optional[int] = Field(30, ge=1, le=365)
@@ -90,17 +90,21 @@ async def run_sync_background(sync_service: SyncService, sync_request: SyncReque
     """Background task to run synchronization."""
     try:
         if sync_request.sync_type == "clients":
-            await sync_service.sync_clients(sync_request.workspace_id)
+            sync_service.sync_clients(sync_request.workspace_id)
         elif sync_request.sync_type == "projects":
-            await sync_service.sync_projects(sync_request.workspace_id)
+            sync_service.sync_projects(sync_request.workspace_id)
         elif sync_request.sync_type == "members":
-            await sync_service.sync_members(sync_request.workspace_id)
+            sync_service.sync_members(sync_request.workspace_id)
         elif sync_request.sync_type == "time_entries":
             start_date = sync_request.start_date or (date.today() - timedelta(days=sync_request.time_entries_days))
             end_date = sync_request.end_date or date.today()
-            await sync_service.sync_time_entries(sync_request.workspace_id, start_date, end_date)
+            sync_service.sync_time_entries(sync_request.workspace_id, start_date, end_date)
         elif sync_request.sync_type == "full":
-            await sync_service.full_sync(sync_request.workspace_id, sync_request.time_entries_days)
+            sync_service.full_sync(sync_request.workspace_id, sync_request.time_entries_days)
+        elif sync_request.sync_type == "metadata":
+            sync_service.sync_metadata(sync_request.workspace_id)
+        elif sync_request.sync_type == "time_entries_only":
+            sync_service.sync_time_entries_only(sync_request.workspace_id, sync_request.time_entries_days)
     except Exception as e:
         # Log error - in a real application you'd want proper logging
         print(f"Background sync failed: {e}")
@@ -143,6 +147,13 @@ async def start_sync(
             # For full sync, run in background and return the first sync log
             sync_logs = sync_service.full_sync(sync_request.workspace_id, sync_request.time_entries_days)
             sync_log = sync_logs[0] if sync_logs else None
+        elif sync_request.sync_type == "metadata":
+            # For metadata sync, run synchronously and return the first sync log
+            sync_logs = sync_service.sync_metadata(sync_request.workspace_id)
+            sync_log = sync_logs[0] if sync_logs else None
+        elif sync_request.sync_type == "time_entries_only":
+            # For time entries only sync, run synchronously
+            sync_log = sync_service.sync_time_entries_only(sync_request.workspace_id, sync_request.time_entries_days)
         else:
             raise HTTPException(status_code=400, detail="Invalid sync type")
         

@@ -4,7 +4,7 @@ import os
 
 # from app.api.test_routes import router as test_router
 from app.api.rates import router as rates_router
-# from app.api.sync import router as sync_router
+from app.api.sync import router as sync_router
 from app.api.reports import router as reports_router
 from app.api.settings import router as settings_router
 
@@ -26,7 +26,7 @@ app.add_middleware(
 # Include routers
 # app.include_router(test_router)
 app.include_router(rates_router)
-# app.include_router(sync_router)
+app.include_router(sync_router)
 app.include_router(reports_router)
 app.include_router(settings_router)
 

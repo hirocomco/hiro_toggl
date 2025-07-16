@@ -80,18 +80,21 @@ export default function Settings() {
 
   const loadSyncStatus = async () => {
     try {
-      // Simulate sync status check
+      const workspaceId = parseInt(settings.workspace_id || '842441')
+      const status = await apiService.getSyncStatus(workspaceId)
+      
+      setSyncStatus({
+        last_sync: status.last_sync,
+        status: status.status === 'running' ? 'syncing' : 'success',
+        message: status.message || 'Data synchronized successfully'
+      })
+    } catch (err: any) {
+      // Fallback to localStorage if API call fails
       const lastSync = localStorage.getItem('last-sync')
       setSyncStatus({
         last_sync: lastSync,
         status: lastSync ? 'success' : 'idle',
         message: lastSync ? 'Data synchronized successfully' : 'No sync performed yet'
-      })
-    } catch (err: any) {
-      setSyncStatus({
-        last_sync: null,
-        status: 'error',
-        message: 'Failed to check sync status'
       })
     }
   }
@@ -142,27 +145,68 @@ export default function Settings() {
     try {
       setSyncStatus({ ...syncStatus, status: 'syncing' })
       
-      // Simulate sync process
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      const workspaceId = parseInt(settings.workspace_id || '842441')
       
-      const now = new Date().toISOString()
-      localStorage.setItem('last-sync', now)
+      // Start actual sync via API - use time_entries_only for faster sync
+      const syncResult = await apiService.startSync({
+        workspace_id: workspaceId,
+        sync_type: 'time_entries_only',
+        time_entries_days: 7  // Only sync last 7 days for quick updates
+      })
       
+      // Poll for sync completion
+      let attempts = 0
+      const maxAttempts = 30 // 30 seconds max wait
+      
+      while (attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        
+        const status = await apiService.getSyncStatus(workspaceId)
+        
+        if (status.status !== 'running') {
+          setSyncStatus({
+            last_sync: status.last_sync || new Date().toISOString(),
+            status: status.status === 'completed' ? 'success' : 'error',
+            message: status.message || 'Manual sync completed successfully'
+          })
+          
+          // Update localStorage for fallback
+          if (status.status === 'completed') {
+            localStorage.setItem('last-sync', status.last_sync || new Date().toISOString())
+          }
+          
+          setTimeout(() => {
+            setSyncStatus(prev => ({ ...prev, status: 'idle' }))
+          }, 3000)
+          
+          return
+        }
+        
+        attempts++
+      }
+      
+      // Timeout fallback
       setSyncStatus({
-        last_sync: now,
+        last_sync: syncStatus.last_sync,
         status: 'success',
-        message: 'Manual sync completed successfully'
+        message: 'Sync started successfully (may still be running)'
       })
       
       setTimeout(() => {
         setSyncStatus(prev => ({ ...prev, status: 'idle' }))
       }, 3000)
+      
     } catch (err: any) {
+      console.error('Manual sync failed:', err)
       setSyncStatus({
         last_sync: syncStatus.last_sync,
         status: 'error',
-        message: 'Sync failed. Please try again.'
+        message: err.message || 'Sync failed. Please try again.'
       })
+      
+      setTimeout(() => {
+        setSyncStatus(prev => ({ ...prev, status: 'idle' }))
+      }, 3000)
     }
   }
 

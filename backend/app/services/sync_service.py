@@ -420,6 +420,73 @@ class SyncService:
 
         return sync_logs
 
+    def sync_metadata(self, workspace_id: int) -> List[SyncLog]:
+        """
+        Sync only metadata (clients, projects, members) for a workspace.
+        
+        This is a lightweight sync that updates relatively static data
+        without syncing time entries. Useful for staying under API rate limits.
+        
+        Args:
+            workspace_id: Workspace ID to sync
+            
+        Returns:
+            List of SyncLog objects for metadata sync operations
+        """
+        sync_logs = []
+
+        try:
+            self.logger.info(f"Starting metadata sync for workspace {workspace_id}")
+            
+            # 1. Sync clients first (needed for projects)
+            clients_log = self.sync_clients(workspace_id)
+            sync_logs.append(clients_log)
+
+            # 2. Sync projects (needs clients)
+            projects_log = self.sync_projects(workspace_id)
+            sync_logs.append(projects_log)
+
+            # 3. Sync members
+            members_log = self.sync_members(workspace_id)
+            sync_logs.append(members_log)
+
+            self.logger.info(f"Metadata sync completed for workspace {workspace_id}")
+
+        except Exception as e:
+            self.logger.error(f"Metadata sync failed for workspace {workspace_id}: {e}")
+            raise
+
+        return sync_logs
+
+    def sync_time_entries_only(self, workspace_id: int, time_entries_days: int = 7) -> SyncLog:
+        """
+        Sync only time entries for a workspace.
+        
+        This is a lightweight sync that updates frequently changing time entry data
+        without syncing metadata. Useful for frequent updates while staying under API rate limits.
+        
+        Args:
+            workspace_id: Workspace ID to sync
+            time_entries_days: Number of days back to sync time entries (default: 7 for recent data)
+            
+        Returns:
+            SyncLog object for time entries sync operation
+        """
+        try:
+            self.logger.info(f"Starting time entries sync for workspace {workspace_id}")
+            
+            # Sync time entries for the specified period
+            end_date = date.today()
+            start_date = end_date - timedelta(days=time_entries_days)
+            time_entries_log = self.sync_time_entries(workspace_id, start_date, end_date)
+
+            self.logger.info(f"Time entries sync completed for workspace {workspace_id}")
+            return time_entries_log
+
+        except Exception as e:
+            self.logger.error(f"Time entries sync failed for workspace {workspace_id}: {e}")
+            raise
+
     def get_sync_status(self, workspace_id: int, limit: int = 10) -> List[SyncLog]:
         """
         Get recent sync logs for a workspace.
