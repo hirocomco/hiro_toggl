@@ -12,7 +12,7 @@ from app.models.database import get_db
 from app.services.sync_service import SyncService, get_sync_service
 from app.models.models import SyncLog
 from toggl_client import EnhancedTogglClient as TogglClient, TogglAPIError
-from config.config.config import TogglConfig
+from config import TogglConfig
 
 
 router = APIRouter(prefix="/api/sync", tags=["sync"])

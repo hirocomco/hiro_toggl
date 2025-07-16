@@ -1,3 +1,3 @@
-from .config.config import TogglConfig
+from .config import TogglConfig
 
 __all__ = ['TogglConfig']
