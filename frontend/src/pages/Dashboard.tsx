@@ -5,7 +5,6 @@ import {
   DollarSign, 
   Users, 
   TrendingUp, 
-  Calendar,
   ExternalLink,
   ArrowUpRight,
   ArrowDownRight
@@ -25,6 +24,8 @@ import {
 
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import ErrorMessage from '@/components/ui/ErrorMessage'
+import DateRangePicker, { DateRange } from '@/components/ui/DateRangePicker'
+import { useDateContext } from '@/contexts/DateContext'
 import { apiService } from '@/services/api'
 import { WorkspaceReportResponse, ClientReportData } from '@/types/api'
 import { formatCurrency, formatHours, formatPercentage } from '@/utils/formatters'
@@ -35,14 +36,14 @@ export default function Dashboard() {
   const [workspaceReport, setWorkspaceReport] = useState<WorkspaceReportResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [selectedPeriod, setSelectedPeriod] = useState('last_30_days')
+  const { selectedPeriod, customRange, setDateRange } = useDateContext()
 
   // Hardcoded workspace ID for demo - in real app this would come from user settings
   const WORKSPACE_ID = 842441
 
   useEffect(() => {
     loadDashboardData()
-  }, [selectedPeriod])
+  }, [selectedPeriod, customRange])
 
   const loadDashboardData = async () => {
     try {
@@ -52,6 +53,8 @@ export default function Dashboard() {
       const reportData = await apiService.getWorkspaceReport({
         workspace_id: WORKSPACE_ID,
         period: selectedPeriod as any,
+        start_date: customRange?.start_date,
+        end_date: customRange?.end_date,
         include_financial: true,
         include_non_billable: true,
         sort_by: 'total_hours',
@@ -99,6 +102,10 @@ export default function Dashboard() {
 
   const { totals, client_reports, summary, date_range } = workspaceReport
 
+  const handleDateRangeChange = (period: string, range?: DateRange) => {
+    setDateRange(period, range)
+  }
+
   // Prepare chart data
   const topClientsData = client_reports.slice(0, 8).map((client, index) => ({
     name: client.client_name.length > 20 
@@ -131,19 +138,11 @@ export default function Dashboard() {
           </p>
         </div>
         
-        <select 
+        <DateRangePicker
           value={selectedPeriod}
-          onChange={(e) => setSelectedPeriod(e.target.value)}
-          className="form-select w-48"
-        >
-          <option value="last_7_days">Last 7 days</option>
-          <option value="last_30_days">Last 30 days</option>
-          <option value="last_90_days">Last 90 days</option>
-          <option value="this_month">This month</option>
-          <option value="last_month">Last month</option>
-          <option value="this_quarter">This quarter</option>
-          <option value="this_year">This year</option>
-        </select>
+          onChange={handleDateRangeChange}
+          className="w-auto"
+        />
       </div>
 
       {/* Key Metrics */}

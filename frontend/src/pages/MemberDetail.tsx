@@ -4,6 +4,8 @@ import { ArrowLeft, Clock, DollarSign, TrendingUp, Target } from 'lucide-react'
 
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import ErrorMessage from '@/components/ui/ErrorMessage'
+import DateRangePicker, { DateRange } from '@/components/ui/DateRangePicker'
+import { useDateContext } from '@/contexts/DateContext'
 import { apiService } from '@/services/api'
 import { MemberPerformanceResponse } from '@/types/api'
 import { formatCurrency, formatHours, formatPercentage } from '@/utils/formatters'
@@ -13,6 +15,7 @@ export default function MemberDetail() {
   const [memberReport, setMemberReport] = useState<MemberPerformanceResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const { selectedPeriod, customRange, setDateRange } = useDateContext()
 
   // Hardcoded workspace ID for demo
   const WORKSPACE_ID = 842441
@@ -21,7 +24,7 @@ export default function MemberDetail() {
     if (memberId) {
       loadMemberReport()
     }
-  }, [memberId])
+  }, [memberId, selectedPeriod, customRange])
 
   const loadMemberReport = async () => {
     try {
@@ -32,7 +35,9 @@ export default function MemberDetail() {
         parseInt(memberId!),
         WORKSPACE_ID,
         {
-          period: 'last_30_days'
+          period: selectedPeriod as any,
+          start_date: customRange?.start_date,
+          end_date: customRange?.end_date
         }
       )
 
@@ -76,6 +81,10 @@ export default function MemberDetail() {
 
   const { totals, clients, date_range } = memberReport
 
+  const handleDateRangeChange = (period: string, range?: DateRange) => {
+    setDateRange(period, range)
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -94,6 +103,11 @@ export default function MemberDetail() {
             </p>
           </div>
         </div>
+        <DateRangePicker
+          value={selectedPeriod}
+          onChange={handleDateRangeChange}
+          className="w-auto"
+        />
       </div>
 
       {/* Summary Cards */}

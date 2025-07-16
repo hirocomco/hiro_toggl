@@ -358,3 +358,206 @@ async def get_sync_summary(
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get sync summary: {str(e)}")
+
+
+@router.post("/chunked-historical")
+async def start_chunked_historical_sync(
+    data: dict,
+    sync_service: SyncService = Depends(get_sync_service)
+):
+    """Start a chunked historical sync for large date ranges."""
+    try:
+        workspace_id = data.get("workspace_id")
+        total_days = data.get("total_days", 365)
+        chunk_size = data.get("chunk_size", 30)
+        
+        if not workspace_id:
+            raise HTTPException(status_code=400, detail="workspace_id is required")
+        
+        # Start chunked sync
+        sync_logs = sync_service.chunked_historical_sync(workspace_id, total_days, chunk_size)
+        
+        # Return summary
+        successful_chunks = len([log for log in sync_logs if log.status == 'completed'])
+        total_chunks = max(1, total_days // chunk_size)
+        
+        return {
+            "status": "completed",
+            "message": f"Chunked historical sync completed",
+            "successful_chunks": successful_chunks,
+            "total_chunks": total_chunks,
+            "sync_logs": [
+                {
+                    "id": log.id,
+                    "sync_type": log.sync_type,
+                    "status": log.status,
+                    "start_time": log.start_time,
+                    "end_time": log.end_time,
+                    "records_processed": log.records_processed,
+                    "records_added": log.records_added,
+                    "records_updated": log.records_updated,
+                    "error_message": log.error_message,
+                    "date_range_start": log.date_range_start,
+                    "date_range_end": log.date_range_end
+                } for log in sync_logs
+            ]
+        }
+    except Exception as e:
+        # logger.error(f"Chunked historical sync failed: {e}") # logger is not defined
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/safe-chunked-historical")
+async def start_safe_chunked_historical_sync(
+    data: dict,
+    sync_service: SyncService = Depends(get_sync_service)
+):
+    """Start a safe chunked historical sync that processes only one chunk at a time."""
+    try:
+        workspace_id = data.get("workspace_id")
+        total_days = data.get("total_days", 365)
+        chunk_size = data.get("chunk_size", 30)
+        chunks_per_call = data.get("chunks_per_call", 1)
+        
+        if not workspace_id:
+            raise HTTPException(status_code=400, detail="workspace_id is required")
+        
+        # Start safe chunked sync
+        result = sync_service.safe_chunked_historical_sync(workspace_id, total_days, chunk_size, chunks_per_call)
+        
+        return {
+            "status": result["status"],
+            "message": result["message"],
+            "chunks_processed": result["chunks_processed"],
+            "chunks_remaining": result["chunks_remaining"],
+            "total_chunks": result["total_chunks"],
+            "progress_percentage": ((result["total_chunks"] - result["chunks_remaining"]) / result["total_chunks"]) * 100 if result["total_chunks"] > 0 else 0,
+            "sync_logs": [
+                {
+                    "id": log.id,
+                    "sync_type": log.sync_type,
+                    "status": log.status,
+                    "start_time": log.start_time,
+                    "end_time": log.end_time,
+                    "records_processed": log.records_processed,
+                    "records_added": log.records_added,
+                    "records_updated": log.records_updated,
+                    "error_message": log.error_message,
+                    "date_range_start": log.date_range_start,
+                    "date_range_end": log.date_range_end
+                } for log in result["sync_logs"]
+            ]
+        }
+    except Exception as e:
+        # logger.error(f"Safe chunked historical sync failed: {e}") # logger is not defined
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/historical-progress/{workspace_id}")
+async def get_historical_sync_progress(
+    workspace_id: int,
+    total_days: int = 365,
+    chunk_size: int = 30,
+    sync_service: SyncService = Depends(get_sync_service)
+):
+    """Get the progress of historical sync for a workspace."""
+    try:
+        progress = sync_service.get_next_historical_chunks(workspace_id, total_days, chunk_size, 0)
+        
+        return {
+            "chunks_completed": progress["chunks_completed"],
+            "total_chunks": progress["total_chunks"],
+            "progress_percentage": progress["progress_percentage"],
+            "is_completed": progress["chunks_completed"] >= progress["total_chunks"],
+            "next_chunk_available": len(progress["chunks_to_process"]) > 0
+        }
+    except Exception as e:
+        # logger.error(f"Failed to get historical sync progress: {e}") # logger is not defined
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/daily-recommendation/{workspace_id}")
+async def get_daily_sync_recommendation(
+    workspace_id: int, 
+    sync_service: SyncService = Depends(get_sync_service)
+):
+    """Get daily sync recommendation based on recent activity."""
+    try:
+        recommendation = sync_service.get_daily_sync_recommendation(workspace_id)
+        
+        return {
+            "workspace_id": workspace_id,
+            **recommendation
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get daily sync recommendation: {str(e)}")
+
+
+@router.post("/auto-sync/{workspace_id}")
+async def trigger_auto_sync(
+    workspace_id: int,
+    sync_service: SyncService = Depends(get_sync_service)
+):
+    """Trigger automatic daily sync for a specific workspace."""
+    try:
+        sync_log = sync_service.run_automatic_daily_sync(workspace_id)
+        
+        if sync_log:
+            return {
+                "workspace_id": workspace_id,
+                "sync_triggered": True,
+                "sync_log": sync_log_to_response(sync_log)
+            }
+        else:
+            return {
+                "workspace_id": workspace_id,
+                "sync_triggered": False,
+                "message": "Automatic sync not needed at this time"
+            }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to trigger auto sync: {str(e)}")
+
+
+@router.post("/auto-sync-all")
+async def trigger_auto_sync_all(
+    sync_service: SyncService = Depends(get_sync_service)
+):
+    """Trigger automatic daily sync for all workspaces."""
+    try:
+        from app.services.setting_service import SettingService
+        from app.models.models import Setting
+        
+        # Get all workspaces with auto_sync enabled
+        setting_service = SettingService(sync_service.db)
+        
+        auto_sync_settings = sync_service.db.query(Setting).filter(
+            Setting.key == 'auto_sync',
+            Setting.value == 'true',
+            Setting.workspace_id.isnot(None)
+        ).all()
+        
+        results = []
+        for setting in auto_sync_settings:
+            workspace_id = setting.workspace_id
+            try:
+                sync_log = sync_service.run_automatic_daily_sync(workspace_id)
+                results.append({
+                    "workspace_id": workspace_id,
+                    "sync_triggered": sync_log is not None,
+                    "sync_log": sync_log_to_response(sync_log) if sync_log else None
+                })
+            except Exception as e:
+                results.append({
+                    "workspace_id": workspace_id,
+                    "sync_triggered": False,
+                    "error": str(e)
+                })
+        
+        return {
+            "total_workspaces": len(results),
+            "successful_syncs": len([r for r in results if r["sync_triggered"]]),
+            "results": results
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to trigger auto sync for all workspaces: {str(e)}")

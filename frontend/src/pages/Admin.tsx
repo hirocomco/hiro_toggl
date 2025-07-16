@@ -28,6 +28,10 @@ export default function Admin() {
     clientId?: number
     isNew: boolean
   } | null>(null)
+  const [showClientSelector, setShowClientSelector] = useState<{
+    memberId: number
+    show: boolean
+  } | null>(null)
   const [rateForm, setRateForm] = useState({
     hourly_rate_usd: '',
     hourly_rate_eur: '',
@@ -41,6 +45,21 @@ export default function Admin() {
   useEffect(() => {
     loadAdminData()
   }, [])
+
+  // Close client selector when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showClientSelector?.show) {
+        const target = event.target as HTMLElement
+        if (!target.closest('.relative')) {
+          setShowClientSelector(null)
+        }
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [showClientSelector])
 
   const loadAdminData = async () => {
     try {
@@ -115,11 +134,21 @@ export default function Admin() {
 
   const handleCancelEdit = () => {
     setEditingRate(null)
+    setShowClientSelector(null)
     setRateForm({
       hourly_rate_usd: '',
       hourly_rate_eur: '',
       effective_date: new Date().toISOString().split('T')[0]
     })
+  }
+
+  const handleAddClientRate = (memberId: number) => {
+    setShowClientSelector({ memberId, show: true })
+  }
+
+  const handleSelectClient = (memberId: number, clientId: number) => {
+    setShowClientSelector(null)
+    handleEditRate(memberId, clientId)
   }
 
   if (loading) {
@@ -283,15 +312,24 @@ export default function Admin() {
                           {Object.entries(clientRates).map(([clientId, rate]: [string, any]) => {
                             const client = clients.find(c => c.id === parseInt(clientId))
                             return (
-                              <div key={clientId} className="flex items-center justify-between text-xs">
-                                <span className="text-gray-600 dark:text-gray-300">{client?.name || 'Unknown'}</span>
-                                <div className="flex space-x-2">
-                                  {rate.usd && (
-                                    <span className="text-money">{formatCurrency(rate.usd, 'USD')}</span>
-                                  )}
-                                  {rate.eur && (
-                                    <span className="text-money">{formatCurrency(rate.eur, 'EUR')}</span>
-                                  )}
+                              <div key={clientId} className="flex items-center justify-between text-xs bg-gray-50 dark:bg-gray-800 p-2 rounded">
+                                <span className="text-gray-600 dark:text-gray-300 font-medium">{client?.name || 'Unknown'}</span>
+                                <div className="flex items-center space-x-2">
+                                  <div className="flex space-x-1">
+                                    {rate.usd && (
+                                      <span className="text-money font-medium">{formatCurrency(rate.usd, 'USD')}</span>
+                                    )}
+                                    {rate.eur && (
+                                      <span className="text-money font-medium">{formatCurrency(rate.eur, 'EUR')}</span>
+                                    )}
+                                  </div>
+                                  <button
+                                    onClick={() => handleEditRate(member.id, parseInt(clientId))}
+                                    className="btn btn-ghost btn-sm p-1"
+                                    title="Edit client rate"
+                                  >
+                                    <Edit className="h-3 w-3" />
+                                  </button>
                                 </div>
                               </div>
                             )
@@ -323,16 +361,47 @@ export default function Admin() {
                             <button
                               onClick={() => handleEditRate(member.id)}
                               className="btn btn-ghost btn-sm"
+                              title="Edit default rate"
                             >
                               <Edit className="h-4 w-4" />
                             </button>
-                            <button
-                              onClick={() => handleEditRate(member.id, clients[0]?.id)}
-                              className="btn btn-ghost btn-sm"
-                              title="Add client override"
-                            >
-                              <Plus className="h-4 w-4" />
-                            </button>
+                            <div className="relative">
+                              <button
+                                onClick={() => handleAddClientRate(member.id)}
+                                className="btn btn-ghost btn-sm"
+                                title="Add client override"
+                              >
+                                <Plus className="h-4 w-4" />
+                              </button>
+                              {showClientSelector?.memberId === member.id && showClientSelector.show && (
+                                <div className="absolute right-0 top-8 z-10 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg py-1 min-w-48">
+                                  <div className="px-3 py-2 text-xs text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-600">
+                                    Select Client
+                                  </div>
+                                  {clients.filter(client => {
+                                    // Only show clients that don't already have a rate for this member
+                                    const memberRates = workspaceRates?.rates[member.id]
+                                    return !memberRates?.client_rates[client.id]
+                                  }).map((client) => (
+                                    <button
+                                      key={client.id}
+                                      onClick={() => handleSelectClient(member.id, client.id)}
+                                      className="block w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                    >
+                                      {client.name}
+                                    </button>
+                                  ))}
+                                  {clients.filter(client => {
+                                    const memberRates = workspaceRates?.rates[member.id]
+                                    return !memberRates?.client_rates[client.id]
+                                  }).length === 0 && (
+                                    <div className="px-3 py-2 text-xs text-gray-400 dark:text-gray-500">
+                                      All clients have rates
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
                           </div>
                         )}
                       </td>
@@ -345,60 +414,6 @@ export default function Admin() {
         </div>
       </div>
 
-      {/* Client Override Section */}
-      <div className="card">
-        <div className="card-header">
-          <h3 className="text-lg font-semibold">Client-Specific Rates</h3>
-          <p className="text-sm text-gray-500">
-            Override default rates for specific client relationships
-          </p>
-        </div>
-        <div className="card-body">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {clients.map((client) => (
-              <div key={client.id} className="border border-gray-200 rounded-lg p-4">
-                <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">{client.name}</h4>
-                <div className="space-y-2">
-                  {members.map((member) => {
-                    const memberRates = workspaceRates?.rates[member.id]
-                    const clientRate = memberRates?.client_rates[client.id]
-                    
-                    return (
-                      <div key={member.id} className="flex items-center justify-between text-sm">
-                        <span className="text-gray-600 dark:text-gray-300">{member.name}</span>
-                        <div className="flex items-center space-x-2">
-                          {clientRate ? (
-                            <div className="flex space-x-1">
-                              {clientRate.usd && (
-                                <span className="badge badge-success text-xs">
-                                  {formatCurrency(clientRate.usd, 'USD')}
-                                </span>
-                              )}
-                              {clientRate.eur && (
-                                <span className="badge badge-primary text-xs">
-                                  {formatCurrency(clientRate.eur, 'EUR')}
-                                </span>
-                              )}
-                            </div>
-                          ) : (
-                            <span className="text-xs text-gray-400">Default</span>
-                          )}
-                          <button
-                            onClick={() => handleEditRate(member.id, client.id)}
-                            className="btn btn-ghost btn-sm p-1"
-                          >
-                            <Edit className="h-3 w-3" />
-                          </button>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
 
       {/* Instructions */}
       <div className="card bg-blue-50 border-blue-200">

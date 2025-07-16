@@ -35,6 +35,16 @@ export default function Settings() {
     last_sync: null,
     status: 'idle'
   })
+  
+  const [syncOptions, setSyncOptions] = useState({
+    syncType: 'time_entries_only' as 'full' | 'metadata' | 'time_entries_only' | 'clients' | 'projects' | 'members' | 'time_entries',
+    timeframeType: 'days' as 'days' | 'preset' | 'custom',
+    timeEntriesDays: 7,
+    startDate: '',
+    endDate: ''
+  })
+  
+  const [showAdvancedSync, setShowAdvancedSync] = useState(false)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -141,18 +151,39 @@ export default function Settings() {
     }
   }
 
-  const handleManualSync = async () => {
+  const handleManualSync = async (syncOptions?: {
+    syncType: 'full' | 'metadata' | 'time_entries_only' | 'clients' | 'projects' | 'members' | 'time_entries'
+    timeframeType: 'days' | 'preset' | 'custom'
+    timeEntriesDays?: number
+    startDate?: string
+    endDate?: string
+  }) => {
     try {
       setSyncStatus({ ...syncStatus, status: 'syncing' })
       
       const workspaceId = parseInt(settings.workspace_id || '842441')
       
-      // Start actual sync via API - use time_entries_only for faster sync
-      const syncResult = await apiService.startSync({
+      // Prepare sync request based on options
+      let syncRequest: any = {
         workspace_id: workspaceId,
-        sync_type: 'time_entries_only',
-        time_entries_days: 7  // Only sync last 7 days for quick updates
-      })
+        sync_type: syncOptions?.syncType || 'time_entries_only'
+      }
+
+      // Add timeframe options for time entry syncs
+      if (syncOptions?.syncType === 'time_entries_only' || syncOptions?.syncType === 'full' || syncOptions?.syncType === 'time_entries') {
+        if (syncOptions?.timeframeType === 'days') {
+          syncRequest.time_entries_days = syncOptions.timeEntriesDays || 7
+        } else if (syncOptions?.timeframeType === 'custom') {
+          syncRequest.start_date = syncOptions.startDate
+          syncRequest.end_date = syncOptions.endDate
+        } else {
+          // Default to 7 days for quick sync
+          syncRequest.time_entries_days = 7
+        }
+      }
+      
+      // Start actual sync via API
+      const syncResult = await apiService.startSync(syncRequest)
       
       // Poll for sync completion
       let attempts = 0
@@ -207,6 +238,90 @@ export default function Settings() {
       setTimeout(() => {
         setSyncStatus(prev => ({ ...prev, status: 'idle' }))
       }, 3000)
+    }
+  }
+
+  const handleSafeChunkedHistoricalSync = async () => {
+    try {
+      setSyncStatus({ ...syncStatus, status: 'syncing' })
+      
+      const workspaceId = parseInt(settings.workspace_id || '842441')
+      
+      // Get current progress
+      const progress = await apiService.getHistoricalSyncProgress(workspaceId)
+      
+      if (progress.is_completed) {
+        setSyncStatus({
+          ...syncStatus,
+          status: 'success',
+          message: 'Historical sync already completed!'
+        })
+        return
+      }
+      
+      // Start one chunk of the safe historical sync
+      const result = await apiService.startSafeChunkedHistoricalSync({
+        workspace_id: workspaceId,
+        total_days: 365,
+        chunk_size: 30,
+        chunks_per_call: 1
+      })
+      
+      if (result.status === 'completed') {
+        setSyncStatus({
+          last_sync: new Date().toISOString(),
+          status: 'success',
+          message: `🎉 Historical sync completed! All ${result.total_chunks} chunks processed.`
+        })
+      } else {
+        setSyncStatus({
+          last_sync: new Date().toISOString(),
+          status: 'success',
+          message: `✅ Chunk processed! ${result.chunks_remaining} chunks remaining (${Math.round(result.progress_percentage)}% complete). Click again in 1 hour to continue.`
+        })
+      }
+      
+    } catch (error: any) {
+      console.error('Safe historical sync failed:', error)
+      setSyncStatus({
+        ...syncStatus,
+        status: 'error',
+        message: error.message?.includes('API calls') 
+          ? 'Rate limit exceeded. Please wait 1 hour before continuing.'
+          : 'Historical sync failed. Please try again.'
+      })
+    }
+  }
+
+  const handleDailySync = async () => {
+    try {
+      setSyncStatus({ ...syncStatus, status: 'syncing' })
+      
+      const workspaceId = parseInt(settings.workspace_id || '842441')
+      
+      // Get daily sync recommendation
+      const recommendation = await apiService.getDailySyncRecommendation(workspaceId)
+      
+      // Start the recommended daily sync
+      const syncResult = await apiService.startSync({
+        workspace_id: workspaceId,
+        sync_type: 'time_entries_only',
+        time_entries_days: recommendation.recommended_days
+      })
+      
+      setSyncStatus({
+        last_sync: new Date().toISOString(),
+        status: 'success',
+        message: `Daily sync completed: ${recommendation.recommended_days} days synced`
+      })
+      
+    } catch (error: any) {
+      console.error('Daily sync failed:', error)
+      setSyncStatus({
+        ...syncStatus,
+        status: 'error',
+        message: 'Daily sync failed. Please try again.'
+      })
     }
   }
 
@@ -309,10 +424,10 @@ export default function Settings() {
           <div className="flex items-center justify-between">
             <div>
               <label className="text-sm font-medium text-secondary">
-                Automatic Sync
+                Automatic Daily Sync
               </label>
               <p className="text-xs text-muted">
-                Automatically sync data from Toggl at regular intervals
+                Automatically sync recent time entries daily (perfect for free plan)
               </p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
@@ -329,7 +444,7 @@ export default function Settings() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-secondary mb-1">
-                Sync Interval (minutes)
+                Sync Time (Daily)
               </label>
               <select
                 value={settings.sync_interval}
@@ -337,11 +452,11 @@ export default function Settings() {
                 className="form-select"
                 disabled={!settings.auto_sync}
               >
-                <option value={15}>15 minutes</option>
-                <option value={30}>30 minutes</option>
-                <option value={60}>1 hour</option>
-                <option value={120}>2 hours</option>
-                <option value={360}>6 hours</option>
+                <option value={6}>6:00 AM</option>
+                <option value={9}>9:00 AM</option>
+                <option value={12}>12:00 PM</option>
+                <option value={18}>6:00 PM</option>
+                <option value={21}>9:00 PM</option>
               </select>
             </div>
             <div>
@@ -370,24 +485,204 @@ export default function Settings() {
             </div>
           </div>
 
-          <div className="flex items-center justify-between pt-4 border-t">
-            <div>
-              <p className="text-sm text-secondary">
-                {syncStatus.message || 'Ready to sync'}
-              </p>
+          {/* Initial Setup Section */}
+          <div className="border-t pt-4">
+            <h4 className="text-sm font-medium text-primary mb-3">🚀 Initial Setup</h4>
+            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h5 className="font-medium text-blue-900 dark:text-blue-100">Historical Data Import</h5>
+                  <p className="text-sm text-blue-700 dark:text-blue-300">
+                    Import historical data safely - one 30-day chunk at a time (rate limit friendly)
+                  </p>
+                  <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                    💡 Click once per hour to gradually import all historical data, then enable automatic daily sync above
+                  </p>
+                </div>
+                <button
+                  onClick={() => handleSafeChunkedHistoricalSync()}
+                  disabled={syncStatus.status === 'syncing'}
+                  className="btn btn-sm btn-primary"
+                >
+                  {syncStatus.status === 'syncing' ? (
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Database className="h-4 w-4 mr-2" />
+                  )}
+                  Import Next Chunk
+                </button>
+              </div>
             </div>
-            <button
-              onClick={handleManualSync}
-              disabled={syncStatus.status === 'syncing'}
-              className="btn btn-outline btn-sm"
-            >
-              {syncStatus.status === 'syncing' ? (
-                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <RefreshCw className="h-4 w-4 mr-2" />
-              )}
-              Manual Sync
-            </button>
+          </div>
+
+          {/* Advanced Sync Options */}
+          <div className="border-t pt-4">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <p className="text-sm text-secondary">
+                  {syncStatus.message || 'Ready to sync'}
+                </p>
+              </div>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => setShowAdvancedSync(!showAdvancedSync)}
+                  className="btn btn-ghost btn-sm"
+                >
+                  <SettingsIcon className="h-4 w-4 mr-1" />
+                  {showAdvancedSync ? 'Simple' : 'Advanced'}
+                </button>
+                <button
+                  onClick={() => handleManualSync(showAdvancedSync ? syncOptions : undefined)}
+                  disabled={syncStatus.status === 'syncing'}
+                  className="btn btn-outline btn-sm"
+                >
+                  {syncStatus.status === 'syncing' ? (
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                  )}
+                  Manual Sync
+                </button>
+              </div>
+            </div>
+
+            {showAdvancedSync && (
+              <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-secondary mb-2">
+                    Sync Type
+                  </label>
+                  <select
+                    value={syncOptions.syncType}
+                    onChange={(e) => setSyncOptions(prev => ({ ...prev, syncType: e.target.value as any }))}
+                    className="form-select w-full"
+                  >
+                                          <option value="time_entries_only">Time Entries Only (3-25+ API calls)</option>
+                      <option value="full">Full Sync (6-28+ API calls)</option>
+                      <option value="metadata">Metadata Only (3 API calls)</option>
+                      <option value="clients">Clients Only (1 API call)</option>
+                      <option value="projects">Projects Only (1 API call)</option>
+                      <option value="members">Members Only (1 API call)</option>
+                      <option value="time_entries">Time Entries (3-25+ API calls)</option>
+                  </select>
+                  <p className="text-xs text-muted mt-1">
+                    {syncOptions.syncType === 'time_entries_only' && 'Sync only recent time entries for quick updates'}
+                    {syncOptions.syncType === 'full' && 'Sync all data including clients, projects, members, and time entries'}
+                    {syncOptions.syncType === 'metadata' && 'Sync only structural data without time entries'}
+                    {syncOptions.syncType === 'clients' && 'Sync only client information'}
+                    {syncOptions.syncType === 'projects' && 'Sync only project information'}
+                    {syncOptions.syncType === 'members' && 'Sync only workspace members'}
+                    {syncOptions.syncType === 'time_entries' && 'Sync time entries with custom date range'}
+                  </p>
+                </div>
+
+                {(syncOptions.syncType === 'time_entries_only' || syncOptions.syncType === 'full' || syncOptions.syncType === 'time_entries') && (
+                  <div>
+                    <label className="block text-sm font-medium text-secondary mb-2">
+                      Time Entries Timeframe
+                    </label>
+                    <div className="flex space-x-1 bg-white dark:bg-gray-800 rounded-lg p-1 mb-3">
+                      <button
+                        onClick={() => setSyncOptions(prev => ({ ...prev, timeframeType: 'days' }))}
+                        className={`flex-1 py-1 px-2 rounded text-xs font-medium transition-colors ${
+                          syncOptions.timeframeType === 'days'
+                            ? 'bg-primary-500 text-white'
+                            : 'text-muted hover:text-secondary'
+                        }`}
+                      >
+                        Days Back
+                      </button>
+                      <button
+                        onClick={() => setSyncOptions(prev => ({ ...prev, timeframeType: 'custom' }))}
+                        className={`flex-1 py-1 px-2 rounded text-xs font-medium transition-colors ${
+                          syncOptions.timeframeType === 'custom'
+                            ? 'bg-primary-500 text-white'
+                            : 'text-muted hover:text-secondary'
+                        }`}
+                      >
+                        Custom Range
+                      </button>
+                    </div>
+
+                    {syncOptions.timeframeType === 'days' && (
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="number"
+                          min="1"
+                          max="365"
+                          value={syncOptions.timeEntriesDays}
+                          onChange={(e) => setSyncOptions(prev => ({ ...prev, timeEntriesDays: parseInt(e.target.value) || 7 }))}
+                          className="form-input w-20 text-sm"
+                        />
+                        <span className="text-xs text-muted">days back (max 365)</span>
+                      </div>
+                    )}
+
+                    {syncOptions.timeframeType === 'custom' && (
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="block text-xs font-medium text-secondary mb-1">
+                            Start Date
+                          </label>
+                          <input
+                            type="date"
+                            value={syncOptions.startDate}
+                            onChange={(e) => setSyncOptions(prev => ({ ...prev, startDate: e.target.value }))}
+                            className="form-input w-full text-sm"
+                            max={syncOptions.endDate || new Date().toISOString().split('T')[0]}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-secondary mb-1">
+                            End Date
+                          </label>
+                          <input
+                            type="date"
+                            value={syncOptions.endDate}
+                            onChange={(e) => setSyncOptions(prev => ({ ...prev, endDate: e.target.value }))}
+                            className="form-input w-full text-sm"
+                            min={syncOptions.startDate}
+                            max={new Date().toISOString().split('T')[0]}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">
+                  <h4 className="text-sm font-medium text-primary mb-1">Sync Preview</h4>
+                  <p className="text-xs text-secondary">
+                    <strong>Type:</strong> {syncOptions.syncType.replace('_', ' ').toUpperCase()}
+                    {(syncOptions.syncType === 'time_entries_only' || syncOptions.syncType === 'full' || syncOptions.syncType === 'time_entries') && (
+                      <>
+                        <br />
+                        <strong>Timeframe:</strong> {
+                          syncOptions.timeframeType === 'days' 
+                            ? `Last ${syncOptions.timeEntriesDays} days`
+                            : syncOptions.timeframeType === 'custom' && syncOptions.startDate && syncOptions.endDate
+                              ? `${syncOptions.startDate} to ${syncOptions.endDate}`
+                              : 'Custom range (incomplete)'
+                        }
+                      </>
+                    )}
+                  </p>
+                </div>
+                
+                {/* Rate Limit Warning */}
+                <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-3 mt-3">
+                  <h4 className="text-sm font-medium text-yellow-800 dark:text-yellow-200 mb-1">⚠️ Free Plan Rate Limits</h4>
+                  <p className="text-xs text-yellow-700 dark:text-yellow-300">
+                    <strong>Free Plan: 30 API calls/hour</strong> • For 365+ days, consider upgrading to Premium (600 calls/hour)
+                  </p>
+                  <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-1">
+                    Recommended: Use 30 days max for time entries on free plan
+                  </p>
+                </div>
+
+
+              </div>
+            )}
           </div>
         </div>
       </div>

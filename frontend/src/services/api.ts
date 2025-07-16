@@ -243,12 +243,71 @@ class ApiService {
     end_date?: string
     time_entries_days?: number
   }): Promise<SyncLog> {
-    const response = await this.api.post<SyncLog>('/sync/start', data)
+    // Use extended timeout for sync operations (10 minutes)
+    const response = await this.api.post<SyncLog>('/sync/start', data, {
+      timeout: 600000 // 10 minutes for large syncs
+    })
     return this.handleResponse(response)
   }
 
   async getSyncStatus(workspaceId: number): Promise<SyncStatus> {
     const response = await this.api.get<SyncStatus>(`/sync/status/${workspaceId}`)
+    return this.handleResponse(response)
+  }
+
+  // Chunked Historical Sync API
+  async startChunkedHistoricalSync(data: {
+    workspace_id: number
+    total_days: number
+    chunk_size?: number
+  }): Promise<any> {
+    const response = await this.api.post<any>('/sync/chunked-historical', data, {
+      timeout: 1800000 // 30 minutes for chunked sync
+    })
+    return this.handleResponse(response)
+  }
+
+  async startSafeChunkedHistoricalSync(data: {
+    workspace_id: number
+    total_days: number
+    chunk_size?: number
+    chunks_per_call?: number
+  }): Promise<{
+    status: string
+    message: string
+    chunks_processed: number
+    chunks_remaining: number
+    total_chunks: number
+    progress_percentage: number
+    sync_logs: SyncLog[]
+  }> {
+    const response = await this.api.post<any>('/sync/safe-chunked-historical', data, {
+      timeout: 300000 // 5 minutes for single chunk
+    })
+    return this.handleResponse(response)
+  }
+
+  async getHistoricalSyncProgress(workspaceId: number, totalDays = 365, chunkSize = 30): Promise<{
+    chunks_completed: number
+    total_chunks: number
+    progress_percentage: number
+    is_completed: boolean
+    next_chunk_available: boolean
+  }> {
+    const response = await this.api.get<any>(`/sync/historical-progress/${workspaceId}`, {
+      params: { total_days: totalDays, chunk_size: chunkSize }
+    })
+    return this.handleResponse(response)
+  }
+
+  async getDailySyncRecommendation(workspaceId: number): Promise<{
+    recommended_days: number
+    estimated_api_calls: number
+    is_safe_for_free_plan: boolean
+    last_sync_date: string | null
+    sync_type: string
+  }> {
+    const response = await this.api.get<any>(`/sync/daily-recommendation/${workspaceId}`)
     return this.handleResponse(response)
   }
 

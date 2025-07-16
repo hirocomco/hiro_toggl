@@ -4,6 +4,8 @@ import { ArrowLeft, Users, Clock, DollarSign, TrendingUp } from 'lucide-react'
 
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import ErrorMessage from '@/components/ui/ErrorMessage'
+import DateRangePicker, { DateRange } from '@/components/ui/DateRangePicker'
+import { useDateContext } from '@/contexts/DateContext'
 import { apiService } from '@/services/api'
 import { ClientDetailResponse } from '@/types/api'
 import { formatCurrency, formatHours, formatPercentage } from '@/utils/formatters'
@@ -13,6 +15,7 @@ export default function ClientDetail() {
   const [clientReport, setClientReport] = useState<ClientDetailResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const { selectedPeriod, customRange, setDateRange } = useDateContext()
 
   // Hardcoded workspace ID for demo
   const WORKSPACE_ID = 842441
@@ -21,7 +24,7 @@ export default function ClientDetail() {
     if (clientId) {
       loadClientReport()
     }
-  }, [clientId])
+  }, [clientId, selectedPeriod, customRange])
 
   const loadClientReport = async () => {
     try {
@@ -32,7 +35,9 @@ export default function ClientDetail() {
         clientId === '0' ? null : parseInt(clientId!),
         WORKSPACE_ID,
         {
-          period: 'last_30_days',
+          period: selectedPeriod as any,
+          start_date: customRange?.start_date,
+          end_date: customRange?.end_date,
           include_project_breakdown: true
         }
       )
@@ -77,6 +82,10 @@ export default function ClientDetail() {
 
   const { totals, projects, date_range } = clientReport
 
+  const handleDateRangeChange = (period: string, range?: DateRange) => {
+    setDateRange(period, range)
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -95,6 +104,11 @@ export default function ClientDetail() {
             </p>
           </div>
         </div>
+        <DateRangePicker
+          value={selectedPeriod}
+          onChange={handleDateRangeChange}
+          className="w-auto"
+        />
       </div>
 
       {/* Summary Cards */}

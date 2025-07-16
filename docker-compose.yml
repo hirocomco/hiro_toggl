@@ -40,6 +40,7 @@ services:
     environment:
       - VITE_API_URL=http://localhost:8001
     volumes:
+      - ./frontend:/app
       - /app/node_modules
     networks:
       - toggl-network
