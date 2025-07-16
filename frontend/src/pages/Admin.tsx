@@ -35,7 +35,7 @@ export default function Admin() {
   const [rateForm, setRateForm] = useState({
     hourly_rate_usd: '',
     hourly_rate_eur: '',
-    effective_date: new Date().toISOString().split('T')[0]
+    effective_date: '2024-07-16' // Set to earliest time entry date to cover all data
   })
   const [saving, setSaving] = useState(false)
 

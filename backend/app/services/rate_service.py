@@ -76,7 +76,8 @@ class RateService:
             ValueError: If member doesn't exist or invalid data
         """
         if effective_date is None:
-            effective_date = date.today()
+            # Set to earliest time entry date to ensure rates apply to all historical data
+            effective_date = date(2024, 7, 16)
 
         # Verify member exists
         member = self.db.query(Member).filter(Member.id == member_id).first()
