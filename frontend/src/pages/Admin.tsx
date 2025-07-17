@@ -97,7 +97,7 @@ export default function Admin() {
     setRateForm({
       hourly_rate_usd: currentRate?.usd?.toString() || '',
       hourly_rate_eur: currentRate?.eur?.toString() || '',
-      effective_date: currentRate?.effective_date || new Date().toISOString().split('T')[0]
+      effective_date: '2024-07-16' // Always use earliest date to cover all historical data
     })
   }
 
@@ -122,7 +122,7 @@ export default function Admin() {
       setRateForm({
         hourly_rate_usd: '',
         hourly_rate_eur: '',
-        effective_date: new Date().toISOString().split('T')[0]
+        effective_date: '2024-07-16' // Always use earliest date to cover all historical data
       })
     } catch (err: any) {
       console.error('Failed to save rate:', err)
@@ -138,7 +138,7 @@ export default function Admin() {
     setRateForm({
       hourly_rate_usd: '',
       hourly_rate_eur: '',
-      effective_date: new Date().toISOString().split('T')[0]
+      effective_date: '2024-07-16' // Always use earliest date to cover all historical data
     })
   }
 
