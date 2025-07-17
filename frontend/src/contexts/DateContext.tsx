@@ -20,7 +20,7 @@ export const useDateContext = () => {
 const DATE_STORAGE_KEY = 'toggle_date_filter'
 
 export const DateProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [selectedPeriod, setSelectedPeriod] = useState('last_30_days')
+  const [selectedPeriod, setSelectedPeriod] = useState('this_month')
   const [customRange, setCustomRange] = useState<DateRange | undefined>()
 
   // Load saved date preferences on mount

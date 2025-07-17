@@ -5,7 +5,7 @@ API endpoints for data synchronization.
 from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks, status, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from pydantic import BaseModel, Field
 
 from app.models.database import get_db
@@ -75,8 +75,8 @@ def sync_log_to_response(sync_log: SyncLog) -> SyncLogResponse:
         workspace_id=sync_log.workspace_id,
         sync_type=sync_log.sync_type,
         status=sync_log.status,
-        start_time=sync_log.start_time.isoformat(),
-        end_time=sync_log.end_time.isoformat() if sync_log.end_time else None,
+        start_time=sync_log.start_time.replace(tzinfo=timezone.utc).isoformat(),
+        end_time=sync_log.end_time.replace(tzinfo=timezone.utc).isoformat() if sync_log.end_time else None,
         records_processed=sync_log.records_processed,
         records_added=sync_log.records_added,
         records_updated=sync_log.records_updated,

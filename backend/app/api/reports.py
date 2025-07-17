@@ -105,7 +105,7 @@ async def generate_workspace_report(
             date_range={
                 "start": start_date.isoformat(),
                 "end": end_date.isoformat(),
-                "description": format_date_range_description(start_date, end_date)
+                "description": format_date_range_description(start_date, end_date, request.period)
             },
             totals=ReportTotals(
                 total_hours=report_data.total_hours,
@@ -206,7 +206,7 @@ async def get_client_detail_report(
             date_range={
                 "start": start_date.isoformat(),
                 "end": end_date.isoformat(),
-                "description": format_date_range_description(start_date, end_date)
+                "description": format_date_range_description(start_date, end_date, period)
             },
             totals=ReportTotals(
                 total_hours=totals_data['total_hours'],
@@ -263,7 +263,7 @@ async def get_member_performance_report(
             date_range={
                 "start": start_date.isoformat(),
                 "end": end_date.isoformat(),
-                "description": format_date_range_description(start_date, end_date)
+                "description": format_date_range_description(start_date, end_date, period)
             },
             totals=ReportTotals(
                 total_hours=totals_data['total_hours'],
@@ -490,7 +490,7 @@ async def get_report_summary(
             "date_range": {
                 "start": start_date.isoformat(),
                 "end": end_date.isoformat(),
-                "description": format_date_range_description(start_date, end_date)
+                "description": format_date_range_description(start_date, end_date, period)
             },
             "totals": {
                 "total_hours": round(total_duration / 3600, 2),

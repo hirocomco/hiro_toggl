@@ -93,10 +93,15 @@ export default function Settings() {
       const workspaceId = parseInt(settings.workspace_id || '842441')
       const status = await apiService.getSyncStatus(workspaceId)
       
+      // Extract the most recent completed sync from recent_syncs
+      const lastCompletedSync = status.recent_syncs?.find(sync => 
+        sync.status === 'completed' && sync.end_time
+      )
+      
       setSyncStatus({
-        last_sync: status.last_sync,
-        status: status.status === 'running' ? 'syncing' : 'success',
-        message: status.message || 'Data synchronized successfully'
+        last_sync: lastCompletedSync?.end_time || null,
+        status: status.is_sync_running ? 'syncing' : (lastCompletedSync ? 'success' : 'idle'),
+        message: lastCompletedSync ? 'Data synchronized successfully' : 'No sync performed yet'
       })
     } catch (err: any) {
       // Fallback to localStorage if API call fails
@@ -194,16 +199,23 @@ export default function Settings() {
         
         const status = await apiService.getSyncStatus(workspaceId)
         
-        if (status.status !== 'running') {
+        if (!status.is_sync_running) {
+          // Extract the most recent completed sync
+          const lastCompletedSync = status.recent_syncs?.find(sync => 
+            sync.status === 'completed' && sync.end_time
+          )
+          
+          const syncTime = lastCompletedSync?.end_time || new Date().toISOString()
+          
           setSyncStatus({
-            last_sync: status.last_sync || new Date().toISOString(),
-            status: status.status === 'completed' ? 'success' : 'error',
-            message: status.message || 'Manual sync completed successfully'
+            last_sync: syncTime,
+            status: lastCompletedSync ? 'success' : 'error',
+            message: lastCompletedSync ? 'Manual sync completed successfully' : 'Sync failed or incomplete'
           })
           
           // Update localStorage for fallback
-          if (status.status === 'completed') {
-            localStorage.setItem('last-sync', status.last_sync || new Date().toISOString())
+          if (lastCompletedSync) {
+            localStorage.setItem('last-sync', syncTime)
           }
           
           setTimeout(() => {

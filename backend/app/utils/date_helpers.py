@@ -177,18 +177,50 @@ def get_week_range(reference_date: date, week_start_day: int = 0) -> Tuple[date,
     return start_date, end_date
 
 
-def format_date_range_description(start_date: date, end_date: date) -> str:
+def format_date_range_description(start_date: date, end_date: date, period: Optional[ReportPeriod] = None) -> str:
     """
     Create a human-readable description of a date range.
     
     Args:
         start_date: Start date
         end_date: End date
+        period: Optional original period enum for accurate labeling
         
     Returns:
         Human-readable date range description
     """
     today = date.today()
+    
+    # If we have the original period, use it for primary determination
+    if period:
+        if period == ReportPeriod.LAST_7_DAYS:
+            return "Last 7 days"
+        elif period == ReportPeriod.LAST_30_DAYS:
+            return "Last 30 days"
+        elif period == ReportPeriod.LAST_90_DAYS:
+            return "Last 90 days"
+        elif period == ReportPeriod.THIS_MONTH:
+            if end_date == today:
+                return f"This month (through {end_date.strftime('%B %d')})"
+            else:
+                return "This month"
+        elif period == ReportPeriod.LAST_MONTH:
+            return "Last month"
+        elif period == ReportPeriod.THIS_QUARTER:
+            if end_date == today:
+                return f"This quarter (through {end_date.strftime('%B %d')})"
+            else:
+                return "This quarter"
+        elif period == ReportPeriod.LAST_QUARTER:
+            return "Last quarter"
+        elif period == ReportPeriod.THIS_YEAR:
+            if end_date == today:
+                return f"This year (through {end_date.strftime('%B %d')})"
+            else:
+                return "This year"
+        elif period == ReportPeriod.CUSTOM:
+            # Fall through to date-based logic for custom ranges
+            pass
     
     # Special cases for common ranges
     if start_date == end_date:
