@@ -351,14 +351,16 @@ class SyncService:
             records_updated = 0
 
             for entry in time_entries:
-                # Get local project ID
+                # Get local project ID and name
                 local_project_id = None
+                local_project_name = None
                 if entry.project_id:
                     local_project = self.db.query(Project).filter(
                         Project.toggl_id == entry.project_id
                     ).first()
                     if local_project:
                         local_project_id = local_project.id
+                        local_project_name = local_project.name
 
                 # Parse start and stop times
                 start_time = datetime.fromisoformat(entry.start.replace('Z', '+00:00'))
@@ -380,7 +382,7 @@ class SyncService:
                     existing_entry.user_id = entry.user_id
                     existing_entry.user_name = entry.user_name
                     existing_entry.project_id = local_project_id
-                    existing_entry.project_name = entry.project_name
+                    existing_entry.project_name = local_project_name
                     existing_entry.client_id = entry.client_id
                     existing_entry.client_name = entry.client_name
                     existing_entry.workspace_id = entry.workspace_id
@@ -400,7 +402,7 @@ class SyncService:
                         user_id=entry.user_id,
                         user_name=entry.user_name,
                         project_id=local_project_id,
-                        project_name=entry.project_name,
+                        project_name=local_project_name,
                         client_id=entry.client_id,
                         client_name=entry.client_name,
                         workspace_id=entry.workspace_id,
