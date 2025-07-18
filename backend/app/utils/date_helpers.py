@@ -201,21 +201,21 @@ def format_date_range_description(start_date: date, end_date: date, period: Opti
             return "Last 90 days"
         elif period == ReportPeriod.THIS_MONTH:
             if end_date == today:
-                return f"This month (through {end_date.strftime('%B %d')})"
+                return f"This month (through {end_date.strftime('%d %B')})"
             else:
                 return "This month"
         elif period == ReportPeriod.LAST_MONTH:
             return "Last month"
         elif period == ReportPeriod.THIS_QUARTER:
             if end_date == today:
-                return f"This quarter (through {end_date.strftime('%B %d')})"
+                return f"This quarter (through {end_date.strftime('%d %B')})"
             else:
                 return "This quarter"
         elif period == ReportPeriod.LAST_QUARTER:
             return "Last quarter"
         elif period == ReportPeriod.THIS_YEAR:
             if end_date == today:
-                return f"This year (through {end_date.strftime('%B %d')})"
+                return f"This year (through {end_date.strftime('%d %B')})"
             else:
                 return "This year"
         elif period == ReportPeriod.CUSTOM:
@@ -229,7 +229,7 @@ def format_date_range_description(start_date: date, end_date: date, period: Opti
         elif start_date == today - timedelta(days=1):
             return "Yesterday"
         else:
-            return start_date.strftime("%B %d, %Y")
+            return start_date.strftime("%d %B %Y")
     
     # Check for common periods
     if end_date == today:
@@ -264,7 +264,7 @@ def format_date_range_description(start_date: date, end_date: date, period: Opti
         if end_date >= current_quarter_end:
             return "This quarter"
         else:
-            return f"This quarter (through {end_date.strftime('%B %d')})"
+            return f"This quarter (through {end_date.strftime('%d %B')})"
     elif start_date == last_quarter_start and end_date == last_quarter_end:
         return "Last quarter"
     
@@ -280,11 +280,11 @@ def format_date_range_description(start_date: date, end_date: date, period: Opti
     # Default format
     if start_date.year == end_date.year:
         if start_date.month == end_date.month:
-            return f"{start_date.strftime('%B %d')} - {end_date.strftime('%d, %Y')}"
+            return f"{start_date.strftime('%d %B')} - {end_date.strftime('%d %B %Y')}"
         else:
-            return f"{start_date.strftime('%B %d')} - {end_date.strftime('%B %d, %Y')}"
+            return f"{start_date.strftime('%d %B')} - {end_date.strftime('%d %B %Y')}"
     else:
-        return f"{start_date.strftime('%B %d, %Y')} - {end_date.strftime('%B %d, %Y')}"
+        return f"{start_date.strftime('%d %B %Y')} - {end_date.strftime('%d %B %Y')}"
 
 
 def get_business_days_count(start_date: date, end_date: date, 

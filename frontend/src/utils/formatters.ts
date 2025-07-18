@@ -24,7 +24,7 @@ export function formatCurrency(
     return `${currency === 'USD' ? '$' : '€'}${(amount / 1000).toFixed(1)}K`
   }
   
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat('en-GB', {
     style: 'currency',
     currency: currency,
     minimumFractionDigits,
@@ -114,7 +114,7 @@ export function formatNumber(
     }
   }
   
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat('en-GB', {
     minimumFractionDigits: precision,
     maximumFractionDigits: precision,
   }).format(value)
@@ -170,7 +170,7 @@ export function formatDate(
     formatOptions.hour12 = true
   }
   
-  return new Intl.DateTimeFormat('en-US', formatOptions).format(dateObj)
+  return new Intl.DateTimeFormat('en-GB', formatOptions).format(dateObj)
 }
 
 /**
@@ -196,9 +196,9 @@ export function formatDateRange(
   // Same month and year
   if (start.getMonth() === end.getMonth() && start.getFullYear() === end.getFullYear()) {
     if (format === 'short') {
-      return `${start.getMonth() + 1}/${start.getDate()}-${end.getDate()}/${start.getFullYear()}`
+      return `${start.getDate()}/${start.getMonth() + 1}-${end.getDate()}/${start.getFullYear()}`
     }
-    return `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${end.getDate()}, ${start.getFullYear()}`
+    return `${start.toLocaleDateString('en-GB', { month: 'short', day: 'numeric' })} - ${end.getDate()}, ${start.getFullYear()}`
   }
   
   // Same year

@@ -488,7 +488,7 @@ export default function Settings() {
                   )}
                   <span className="text-sm text-secondary">
                     {syncStatus.last_sync 
-                      ? new Date(syncStatus.last_sync).toLocaleString()
+                      ? new Date(syncStatus.last_sync).toLocaleString('en-GB')
                       : 'Never'
                     }
                   </span>
