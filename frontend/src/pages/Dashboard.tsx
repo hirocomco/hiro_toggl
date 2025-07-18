@@ -25,6 +25,7 @@ import {
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import ErrorMessage from '@/components/ui/ErrorMessage'
 import DateRangePicker, { DateRange } from '@/components/ui/DateRangePicker'
+import ClientCard from '@/components/ClientCard'
 import { useDateContext } from '@/contexts/DateContext'
 import { apiService } from '@/services/api'
 import { WorkspaceReportResponse, ClientReportData } from '@/types/api'
@@ -260,92 +261,15 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Client Hours Bar Chart */}
-        <div className="card">
-          <div className="card-header">
-            <h3 className="text-lg font-semibold text-primary">Top Clients by Hours</h3>
-            <p className="text-sm text-muted">All tracked hours are billable</p>
-          </div>
-          <div className="card-body">
-            <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={topClientsData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis 
-                    dataKey="name" 
-                    tick={{ fontSize: 12 }}
-                    angle={-45}
-                    textAnchor="end"
-                    height={80}
-                  />
-                  <YAxis tick={{ fontSize: 12 }} />
-                  <Tooltip 
-                    formatter={(value, name) => [
-                      `${formatHours(value as number)}`,
-                      'Billable Hours'
-                    ]}
-                    labelFormatter={(label) => {
-                      const client = topClientsData.find(c => c.name === label)
-                      return client?.fullName || label
-                    }}
-                  />
-                  <Bar dataKey="hours" fill="#22c55e" name="Billable" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        </div>
-
-        {/* Client Distribution Pie Chart */}
-        <div className="card">
-          <div className="card-header">
-            <h3 className="text-lg font-semibold text-primary">Time Distribution</h3>
-            <p className="text-sm text-muted">Hours breakdown by client</p>
-          </div>
-          <div className="card-body">
-            <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={pieData}
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={100}
-                    dataKey="value"
-                    label={({ name, percentage }) => `${percentage}%`}
-                  >
-                    {pieData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                    formatter={(value) => [`${formatHours(value as number)}`, 'Hours']}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="mt-4 space-y-2">
-              {pieData.slice(0, 4).map((item, index) => (
-                <div key={index} className="flex items-center justify-between text-sm">
-                  <div className="flex items-center space-x-2">
-                    <div 
-                      className="w-3 h-3 rounded-full"
-                      style={{ backgroundColor: item.color }}
-                    />
-                    <span className="text-secondary truncate max-w-32">
-                      {item.name}
-                    </span>
-                  </div>
-                  <span className="font-medium text-primary">
-                    {formatHours(item.value)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+      {/* Client Cards Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {client_reports.map((client, index) => (
+          <ClientCard 
+            key={client.client_id || 'no-client'} 
+            client={client}
+            color={COLORS[index % COLORS.length]}
+          />
+        ))}
       </div>
 
       {/* Client List */}
